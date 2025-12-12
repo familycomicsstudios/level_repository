@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% load level_tags %}
+
+
+{% block title %}{{ user_profile.username }}{% endblock %}
+
+{% block content %}
+<h1>Profile of {{ user_profile.username }}</h1>
+<p>Date Joined: {{ user_profile.date_joined }}</p>
+<p>Explosions: {{ profile.stats.explosions }}</p>
+<h2>Levels Completed</h2>
+<ul>
+{% for level_id in profile.stats.levels_completed %}
+{% get_level_by_id level_id as level %}
+<li><a href="{% url 'levels:level_detail' level_id %}">{{ level }}</a></li>
+{% empty %}
+<li>None</li>
+{% endfor %}
+</ul>
+{% endblock %}

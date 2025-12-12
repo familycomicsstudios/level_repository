@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Upload Level{% endblock %}
+{% block content %}
+<h2 class="mb-4">Upload Level</h2>
+<form method="post" class="form-group">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">Upload</button>
+</form>
+{% endblock %}

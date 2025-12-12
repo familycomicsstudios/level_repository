@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+
+{% block title %}Edit Comment{% endblock %}
+
+{% block content %}
+
+<!-- templates/edit_comment.html -->
+<h2>Edit Comment</h2>
+<form method="post">
+    {% csrf_token %}
+    <textarea name="content" rows="4">{{ comment.content }}</textarea>
+    <br>
+    <button type="submit">Update Comment</button>
+</form>
+<a href="{% url 'levels:level_detail' comment.level.id %}">Cancel</a>
+{% endblock %}

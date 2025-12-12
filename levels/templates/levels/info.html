@@ -1,0 +1,30 @@
+
+{% extends "base.html" %}
+
+{% block title %}Appel Level Repository{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1>Info</h1>
+    <p>This is the page to get info about the Appel Level Repository.</p>
+
+    <h2>Rules</h2>
+    <p>This level allows you to create levels and play levels. Therefore, there need to be rules for both uploading and verifying levels.</p>
+    <h3>Uploading Levels</h3>
+    <ul>
+        <li>All levels you upload must either be created by you, or have credit to the original creator in the description.</li>
+        <li>All levels uploaded must either have a valid code or a Scratch project link to an Appel mod.</li>
+        <li>All levels must be theoretically possible, or it will get removed.</li>
+        <li>All levels uploaded must not have swearing or other inappropriate words inside the title, description, or level.</li>
+    </ul>
+
+    <h3>Verifying levels</h3>
+    <ul>
+        <li>All levels must be verified in real-time.</li>
+        <li>All levels must be verified at 30FPS, or as close as possible. Levels cannot be verified in less than 25FPS.</li>
+        <li>All level verifications must be played by you.</li>
+        <li>Level verifications must require either a replay code or a video. Be sure to keep both - if there are any suspicions about your run, we may ask for one or the other.</li>
+        <li>Level verifications must be played in either the original mod or an allowed mod for use. Replay codes must work in this mod.</li>
+    </ul>
+</div>
+{% endblock %}

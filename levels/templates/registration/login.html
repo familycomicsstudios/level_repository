@@ -1,0 +1,18 @@
+<!-- templates/registration/custom_login.html -->
+{% extends "base.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Login to Your Account</h2>
+    <form method="post" class="form-group">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Log in</button>
+    </form>
+    <p class="mt-3">
+        Don't have an account? <a href="{% url 'levels:signup' %}">Sign up here</a>.
+    </p>
+</div>
+{% endblock %}

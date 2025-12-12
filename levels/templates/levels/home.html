@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="jumbotron">
+    <h1 class="display-4">Welcome to the Appel Level Repository!</h1>
+    <p class="lead">Upload, share, and discover new levels created by the Appel community.</p>
+    <hr class="my-4">
+    <p>Sign up or log in to get started, or browse the levels already available.</p>
+    <a class="btn btn-primary btn-lg" href="{% url 'levels:list' %}" role="button">Browse Levels</a>
+    {% if not user.is_authenticated %}
+        <a class="btn btn-secondary btn-lg" href="{% url 'levels:signup' %}" role="button">Sign Up</a>
+    {% endif %}
+    <a class="btn btn-primary btn-lg" href="{% url 'levels:info_page' %}" role="button">Rules</a>
+</div>
+{% endblock %}
