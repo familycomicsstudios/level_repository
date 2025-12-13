@@ -4,7 +4,7 @@
 {% block title %}{{ level.name }}{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
+<div class="container">
     <h2>{{ level.name }} by {% if level.original_uploader %}{{ level.original_uploader }}{% else %}{{ level.creator.username }}{% endif %}</h2>
 
     {% if user.is_authenticated and level.creator == user %}
