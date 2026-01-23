@@ -139,15 +139,15 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+# For Vercel serverless, we don't need STATIC_ROOT since WhiteNoise serves from STATICFILES_DIRS
+STATIC_ROOT = None
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
 ]
 
-# WhiteNoise static file configuration
-# Using CompressedStaticFilesStorage instead of Manifest version to avoid missing file errors
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+# WhiteNoise configuration for Vercel serverless
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
 LOGIN_REDIRECT_URL = '/'
 
