@@ -1,0 +1,36 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "level_repository/wsgi.py",
+      "use": "@vercel/python",
+      "config": { "maxLambdaSize": "15mb", "runtime": "python3.9" }
+    },
+    {
+      "src": "build_files.sh",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "staticfiles"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/static/(.*)",
+      "dest": "/static/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "level_repository/wsgi.py"
+    }
+  ],
+  "env": {
+    "SECRET_KEY": "@secret_key",
+    "DEBUG": "False",
+    "POSTGRES_URL": "@postgres_url",
+    "POSTGRES_DATABASE": "@postgres_database",
+    "POSTGRES_HOST": "@postgres_host",
+    "POSTGRES_USER": "@postgres_user",
+    "POSTGRES_PASSWORD": "@postgres_password"
+  }
+}
