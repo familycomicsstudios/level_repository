@@ -38,13 +38,29 @@ def upload_level(request):
     return render(request, 'levels/upload_level.html', {'form': form})
 
 def level_list(request):
+    from django.db.models import Case, When, Value, CharField
+    from django.db.models.functions import Coalesce
+    
     levels = Level.objects.all()
 
     # Sorting functionality
     sort_by = request.GET.get('sort', 'name')  # Default sorting by name
     sort_direction = request.GET.get('direction', 'asc')  # Default sorting direction
 
-    if sort_by in ['name', 'difficulty', 'rated_difficulty', 'mod_category']:
+    if sort_by == 'creator':
+        # Sort by original_uploader if it exists, otherwise by creator username
+        levels = levels.annotate(
+            display_creator=Case(
+                When(original_uploader__isnull=False, original_uploader__gt='', then='original_uploader'),
+                default='creator__username',
+                output_field=CharField()
+            )
+        )
+        if sort_direction == 'desc':
+            levels = levels.order_by('-display_creator')
+        else:
+            levels = levels.order_by('display_creator')
+    elif sort_by in ['name', 'difficulty', 'rated_difficulty', 'mod_category']:
         if sort_direction == 'desc':
             levels = levels.order_by(f'-{sort_by}')  # Descending order
         else:
