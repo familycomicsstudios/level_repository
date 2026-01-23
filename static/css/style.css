@@ -12,3 +12,6 @@ body {
     border-radius: 20px;
     margin-bottom: 5%
 }
+.pagination span {
+    margin-right: 1rem;
+}

@@ -40,7 +40,7 @@
 
     <!-- Pagination Links -->
     <div class="pagination">
-        <span class="me-3">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
         <div>
             {% if page_obj.has_previous %}
                 <a href="?page=1&sort={{ sort_by }}&direction={{ sort_direction }}" class="btn btn-secondary">First</a>
