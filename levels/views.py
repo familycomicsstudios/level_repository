@@ -80,12 +80,14 @@ def level_list(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
+    difficulty_system = request.user.profile.difficulty_system if request.user.is_authenticated else 'punter'
+
     return render(request, 'levels/level_list.html',
     {
         'page_obj': page_obj,
         'sort_by': sort_by,
         'sort_direction': sort_direction,
-        'difficulty_system': request.user.profile.difficulty_system if request.user.is_authenticated else 'punter',
+        'difficulty_system': difficulty_system,
     })
 
 

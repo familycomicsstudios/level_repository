@@ -13,7 +13,12 @@ class ProfileSettingsForm(forms.ModelForm):
         label="Preferred difficulty system",
         help_text="Used to render level difficulties across the site.",
     )
+    dark_mode = forms.BooleanField(
+        label="Enable dark theme",
+        help_text="Use dark theme across the site.",
+        required=False,
+    )
 
     class Meta:
         model = Profile
-        fields = ['difficulty_system']
+        fields = ['difficulty_system', 'dark_mode']

@@ -11,6 +11,17 @@
     <!-- Bootstrap CSS CDN -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
     <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+    <!-- Dark theme CSS (conditionally loaded) -->
+    {% if dark_mode %}<link rel="stylesheet" href="{% static 'css/dark.css' %}" />{% endif %}
+    <script>
+        // Apply dark mode on page load if user preference exists
+        document.addEventListener('DOMContentLoaded', function() {
+            const darkModeEnabled = {% if dark_mode %}true{% else %}false{% endif %};
+            if (darkModeEnabled) {
+                document.body.classList.add('dark-mode');
+            }
+        });
+    </script>
 </head>
 <body>
     <!-- Navigation Bar -->

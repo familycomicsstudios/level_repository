@@ -46,6 +46,10 @@ class Profile(models.Model):
         default="punter",
         help_text="How to display level difficulties across the site.",
     )
+    dark_mode = models.BooleanField(
+        default=False,
+        help_text="Enable dark theme across the site.",
+    )
 
     def __str__(self):
         return f"{self.user.username}'s Profile"
