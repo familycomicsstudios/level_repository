@@ -141,7 +141,8 @@ STATICFILES_DIRS = (
 )
 
 # WhiteNoise static file configuration
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# Using CompressedStaticFilesStorage instead of Manifest version to avoid missing file errors
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 LOGIN_REDIRECT_URL = '/'
 
