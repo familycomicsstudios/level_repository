@@ -26,7 +26,7 @@
             {% for level in page_obj %}
                 <tr>
                     <td><a href="{% url 'levels:level_detail' level.id %}">{{ level.name }}</a></td>
-                    <td>{{ level.creator.username }}</td>
+                    <td>{% if level.original_uploader %}{{ level.original_uploader }}{% else %}{{ level.creator.username }}{% endif %}</td>
                     <td>{{ level.difficulty }}</td>
                     <td>{{ level.get_mod_category_display }}</td>
                 </tr>
