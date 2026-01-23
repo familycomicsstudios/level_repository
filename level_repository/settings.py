@@ -30,7 +30,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 
 DEBUG = os.getenv("DEBUG") == "True"
 
-ALLOWED_HOSTS = ["appel.pythonanywhere.com", "localhost", "127.0.0.1", ".vercel.app", ".now.sh"]
+ALLOWED_HOSTS = ["appel.pythonanywhere.com", "localhost", "127.0.0.1", ".vercel.app", ".now.sh", "workshop.appelgame.net"]
 
 
 # Application definition
