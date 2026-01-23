@@ -138,18 +138,13 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
 STATIC_URL = '/static/'
-
-# Use /tmp for STATIC_ROOT on Vercel (writable directory)
-if os.getenv('VERCEL'):
-    STATIC_ROOT = '/tmp/staticfiles'
-else:
-    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
 ]
 
-# WhiteNoise configuration
+# WhiteNoise configuration for production
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 LOGIN_REDIRECT_URL = '/'
