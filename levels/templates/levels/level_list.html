@@ -7,9 +7,9 @@
     <!-- Sorting Links -->
     <div class="mb-3">
         <a href="?sort=name&direction={% if sort_by == 'name' and sort_direction == 'asc' %}desc{% else %}asc{% endif %}" class="btn btn-primary">Sort by Name</a>
-        <a href="?sort=difficulty&direction={% if sort_by == 'difficulty' and sort_direction == 'asc' %}desc{% else %}asc{% endif %}" class="btn btn-primary">Sort by Requested Difficulty</a>
-        <a href="?sort=rated_difficulty&direction={% if sort_by == 'rated_difficulty' and sort_direction == 'asc' %}desc{% else %}asc{% endif %}" class="btn btn-primary">Sort by Difficulty</a>
+        <a href="?sort=difficulty&direction={% if sort_by == 'difficulty' and sort_direction == 'asc' %}desc{% else %}asc{% endif %}" class="btn btn-primary">Sort by Difficulty</a>
         <a href="?sort=mod_category&direction={% if sort_by == 'mod_category' and sort_direction == 'asc' %}desc{% else %}asc{% endif %}" class="btn btn-primary">Sort by Mod</a>
+        <a href="?sort=creator&direction={% if sort_by == 'creator' and sort_direction == 'asc' %}desc{% else %}asc{% endif %}" class="btn btn-primary">Sort by Creator</a>
     </div>
 
     <!-- Level Table -->
@@ -17,8 +17,8 @@
         <thead class="thead-dark">
             <tr>
                 <th>Name</th>
+                <th>Creator</th>
                 <th>Difficulty</th>
-                <th>Requested Difficulty</th>
                 <th>Mod</th>
             </tr>
         </thead>
@@ -26,17 +26,13 @@
             {% for level in page_obj %}
                 <tr>
                     <td><a href="{% url 'levels:level_detail' level.id %}">{{ level.name }}</a></td>
-                    {% if level.rated_difficulty %}
-                    <td>{{ level.rated_difficulty }}</td>
-                    {% else %}
-                    <td>Unrated</td>
-                    {% endif %}
+                    <td>{{ level.creator.username }}</td>
                     <td>{{ level.difficulty }}</td>
                     <td>{{ level.get_mod_category_display }}</td>
                 </tr>
             {% empty %}
                 <tr>
-                    <td colspan="2">No levels available.</td>
+                    <td colspan="4">No levels available.</td>
                 </tr>
             {% endfor %}
         </tbody>
