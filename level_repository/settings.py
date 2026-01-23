@@ -82,9 +82,14 @@ WSGI_APPLICATION = 'level_repository.wsgi.application'
 
 # Use PostgreSQL (Supabase) in production, SQLite locally
 if os.getenv('POSTGRES_URL'):
+    # Clean up the POSTGRES_URL - remove invalid 'supa' parameter from Vercel default
+    postgres_url = os.getenv('POSTGRES_URL')
+    if '&supa=' in postgres_url:
+        postgres_url = postgres_url.split('&supa=')[0]
+    
     DATABASES = {
         'default': dj_database_url.config(
-            default=os.getenv('POSTGRES_URL'),
+            default=postgres_url,
             conn_max_age=600,
             conn_health_checks=True,
         )
