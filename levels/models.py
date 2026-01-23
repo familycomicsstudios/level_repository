@@ -1,6 +1,13 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+
+DIFFICULTY_SYSTEM_CHOICES = [
+    ("punter", "Punter"),
+    ("michaelchan", "Michael Chan"),
+    ("scheep", "Scheep"),
+]
+
 class Level(models.Model):
 
     MOD_CHOICES = [
@@ -33,6 +40,12 @@ class Profile(models.Model):
         "levelpoints": 0,
         "levels_completed": [],
     })  # A JSON field for storing stats, like {"score": 0, "level": 1}
+    difficulty_system = models.CharField(
+        max_length=20,
+        choices=DIFFICULTY_SYSTEM_CHOICES,
+        default="punter",
+        help_text="How to display level difficulties across the site.",
+    )
 
     def __str__(self):
         return f"{self.user.username}'s Profile"

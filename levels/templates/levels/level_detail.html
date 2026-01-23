@@ -1,5 +1,6 @@
 <!-- templates/levels/level_detail.html -->
 {% extends "base.html" %}
+{% load level_tags %}
 
 {% block title %}{{ level.name }}{% endblock %}
 
@@ -14,10 +15,13 @@
     <p><strong>Level Code:</strong></p>
     <textarea rows="5" cols="50">{{ level.level_code }}</textarea>
     <p><strong>Mod Category:</strong> {{ level.get_mod_category_display }}</p>
-    {% if level.rated_difficulty %}
-    <p><strong>Rated Difficulty:</strong> {{ level.rated_difficulty }}</p>
-    {% endif %}
-    <p><strong>Requested Difficulty:</strong> {{ level.difficulty }}</p>
+    {% with display_system=difficulty_system|default:"punter" %}
+        {% if level.rated_difficulty %}
+        <p><strong>Rated Difficulty:</strong> {{ level.rated_difficulty|display_difficulty:display_system }}</p>
+        {% endif %}
+        <p><strong>Requested Difficulty:</strong> {{ level.difficulty|display_difficulty:display_system }}</p>
+        <p class="text-muted">Shown using the {{ display_system|difficulty_system_label }} scale.</p>
+    {% endwith %}
     {% if level.original_uploader %}
     <p><strong>Uploader: </strong>{{ level.creator.username }}</p>
     {% endif %}

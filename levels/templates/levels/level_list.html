@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load level_tags %}
 
 {% block content %}
 <div class="container">
@@ -12,31 +13,33 @@
         <a href="?sort=creator&direction={% if sort_by == 'creator' and sort_direction == 'asc' %}desc{% else %}asc{% endif %}" class="btn btn-primary">Sort by Creator</a>
     </div>
 
-    <!-- Level Table -->
-    <table class="table table-striped table-bordered">
-        <thead class="thead-dark">
-            <tr>
-                <th>Name</th>
-                <th>Creator</th>
-                <th>Difficulty</th>
-                <th>Mod</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for level in page_obj %}
+    {% with display_system=difficulty_system|default:"punter" %}
+        <!-- Level Table -->
+        <table class="table table-striped table-bordered">
+            <thead class="thead-dark">
                 <tr>
-                    <td><a href="{% url 'levels:level_detail' level.id %}">{{ level.name }}</a></td>
-                    <td>{% if level.original_uploader %}{{ level.original_uploader }}{% else %}{{ level.creator.username }}{% endif %}</td>
-                    <td>{% if level.rated_difficulty %}{{ level.rated_difficulty }}{% else %}{{ level.difficulty }}{% endif %}</td>
-                    <td>{{ level.get_mod_category_display }}</td>
+                    <th>Name</th>
+                    <th>Creator</th>
+                    <th>Difficulty ({{ display_system|difficulty_system_label }})</th>
+                    <th>Mod</th>
                 </tr>
-            {% empty %}
-                <tr>
-                    <td colspan="4">No levels available.</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                {% for level in page_obj %}
+                    <tr>
+                        <td><a href="{% url 'levels:level_detail' level.id %}">{{ level.name }}</a></td>
+                        <td>{% if level.original_uploader %}{{ level.original_uploader }}{% else %}{{ level.creator.username }}{% endif %}</td>
+                        <td>{% if level.rated_difficulty %}{{ level.rated_difficulty|display_difficulty:display_system }}{% else %}{{ level.difficulty|display_difficulty:display_system }}{% endif %}</td>
+                        <td>{{ level.get_mod_category_display }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="4">No levels available.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endwith %}
 
     <!-- Pagination Links -->
     <div class="pagination">

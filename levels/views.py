@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from .models import Level, Comment
 from django.contrib.auth.models import User
-from .forms import LevelForm
+from .forms import LevelForm, ProfileSettingsForm
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.views import LoginView
 import django.contrib.auth
@@ -14,6 +14,7 @@ from django.core.paginator import Paginator
 def level_detail(request, level_id):
     level = get_object_or_404(Level, id=level_id)  # Fetch the level by its ID
     comments = level.comments.all()
+    difficulty_system = request.user.profile.difficulty_system if request.user.is_authenticated else 'punter'
 
     if request.method == "POST":
         content = request.POST.get("content")
@@ -21,7 +22,15 @@ def level_detail(request, level_id):
             Comment.objects.create(level=level, user=request.user, content=content)
             return redirect('levels:level_detail', level_id=level_id)
 
-    return render(request, 'levels/level_detail.html', {'level': level, 'comments': comments})
+    return render(
+        request,
+        'levels/level_detail.html',
+        {
+            'level': level,
+            'comments': comments,
+            'difficulty_system': difficulty_system,
+        },
+    )
 
 
 @login_required
@@ -76,6 +85,7 @@ def level_list(request):
         'page_obj': page_obj,
         'sort_by': sort_by,
         'sort_direction': sort_direction,
+        'difficulty_system': request.user.profile.difficulty_system if request.user.is_authenticated else 'punter',
     })
 
 
@@ -162,6 +172,27 @@ def delete_comment(request, comment_id):
 
 def info_page(request):
     return render(request, 'levels/info.html')
+
+
+@login_required
+def user_settings(request):
+    profile = request.user.profile
+    if request.method == 'POST':
+        form = ProfileSettingsForm(request.POST, instance=profile)
+        if form.is_valid():
+            form.save()
+            return redirect('levels:user_settings')
+    else:
+        form = ProfileSettingsForm(instance=profile)
+
+    return render(
+        request,
+        'levels/user_settings.html',
+        {
+            'form': form,
+            'difficulty_system': profile.difficulty_system,
+        },
+    )
 
 
 

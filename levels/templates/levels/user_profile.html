@@ -9,6 +9,7 @@
 <h1>Profile of {{ user_profile.username }}</h1>
 <p>Date Joined: {{ user_profile.date_joined }}</p>
 <p>Explosions: {{ profile.stats.explosions }}</p>
+<p>Difficulty display: {{ profile.difficulty_system|difficulty_system_label }}</p>
 <h2>Levels Completed</h2>
 <ul>
 {% for level_id in profile.stats.levels_completed %}
