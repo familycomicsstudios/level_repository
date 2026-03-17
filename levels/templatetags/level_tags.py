@@ -1,4 +1,5 @@
 from django import template
+from django.utils.safestring import mark_safe
 from levels.models import Level, DIFFICULTY_SYSTEM_CHOICES
 from levels.difficulty import format_difficulty, SYSTEM_LABELS
 
@@ -17,7 +18,7 @@ def display_difficulty(value, system):
         numeric_value = float(value)
     except (TypeError, ValueError):
         return value
-    return format_difficulty(numeric_value, system)
+    return mark_safe(format_difficulty(numeric_value, system))
 
 
 @register.simple_tag

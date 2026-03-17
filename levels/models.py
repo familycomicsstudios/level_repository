@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 DIFFICULTY_SYSTEM_CHOICES = [
     ("punter", "Punter"),
     ("michaelchan", "Michael Chan"),
-    ("scheep", "Scheep"),
+    ("grassy", "Grassy"),
 ]
 
 class Level(models.Model):
