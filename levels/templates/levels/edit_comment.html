@@ -7,9 +7,12 @@
 
 <!-- templates/edit_comment.html -->
 <h2>Edit Comment</h2>
+{% if comment_error %}
+<p class="text-danger">{{ comment_error }}</p>
+{% endif %}
 <form method="post">
     {% csrf_token %}
-    <textarea name="content" rows="4">{{ comment.content }}</textarea>
+    <textarea name="content" rows="4">{{ comment_content|default:comment.content }}</textarea>
     <br>
     <button type="submit">Update Comment</button>
 </form>

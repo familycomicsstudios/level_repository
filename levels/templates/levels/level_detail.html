@@ -101,10 +101,13 @@
 {% if user.is_authenticated %}
     <div class="bubble-section">
         <h3>Add a Comment</h3>
+        {% if comment_error %}
+        <p class="text-danger">{{ comment_error }}</p>
+        {% endif %}
         <form method="post">
             {% csrf_token %}
             <input type="hidden" name="action" value="comment">
-            <textarea name="content" rows="3" class="level-code-box" placeholder="Write your comment here..."></textarea>
+            <textarea name="content" rows="3" class="level-code-box" placeholder="Write your comment here...">{{ comment_content }}</textarea>
             <br>
             <button type="submit" class="btn btn-primary">Post Comment</button>
         </form>

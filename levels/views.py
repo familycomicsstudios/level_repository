@@ -17,6 +17,7 @@ from django.shortcuts import get_object_or_404
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import HttpResponseForbidden
+from .profanity import find_profanity
 
 
 def error_404(request, exception):
@@ -34,6 +35,8 @@ def level_detail(request, level_id):
     difficulty_system = request.user.profile.difficulty_system if request.user.is_authenticated else 'punter'
     user_level_rating = None
     user_completion = None
+    comment_error = None
+    comment_content = ""
 
     if request.user.is_authenticated:
         user_level_rating = LevelRating.objects.filter(level=level, user=request.user).first()
@@ -60,10 +63,17 @@ def level_detail(request, level_id):
             if not request.user.is_authenticated:
                 return redirect('levels:login')
 
-            content = request.POST.get("content")
+            content = (request.POST.get("content") or "").strip()
+            comment_content = content
             if content:
-                Comment.objects.create(level=level, user=request.user, content=content)
-                return redirect('levels:level_detail', level_id=level_id)
+                matched_word = find_profanity(content)
+                if matched_word:
+                    comment_error = 'Comment contains blocked language. Please update it and try again.'
+                else:
+                    Comment.objects.create(level=level, user=request.user, content=content)
+                    return redirect('levels:level_detail', level_id=level_id)
+            else:
+                comment_error = 'Comment cannot be empty.'
 
     return render(
         request,
@@ -76,6 +86,8 @@ def level_detail(request, level_id):
             'user_level_rating': user_level_rating,
             'user_completion': user_completion,
             'ratings_count': level.ratings.count(),
+            'comment_error': comment_error,
+            'comment_content': comment_content,
         },
     )
 
@@ -352,11 +364,33 @@ def edit_comment(request, comment_id):
         return redirect('levels:level_detail', level_id=comment.level.id)  # Redirect if not the owner
 
     if request.method == 'POST':
-        content = request.POST.get('content')
+        content = (request.POST.get('content') or '').strip()
         if content:
+            matched_word = find_profanity(content)
+            if matched_word:
+                return render(
+                    request,
+                    'levels/edit_comment.html',
+                    {
+                        'comment': comment,
+                        'comment_error': 'Comment contains blocked language. Please update it and try again.',
+                        'comment_content': content,
+                    },
+                )
+
             comment.content = content
             comment.save()
             return redirect('levels:level_detail', level_id=comment.level.id)
+
+        return render(
+            request,
+            'levels/edit_comment.html',
+            {
+                'comment': comment,
+                'comment_error': 'Comment cannot be empty.',
+                'comment_content': content,
+            },
+        )
 
     return render(request, 'levels/edit_comment.html', {'comment': comment})
 

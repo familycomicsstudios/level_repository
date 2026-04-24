@@ -4,6 +4,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
 from .models import Level, Profile, LevelRating, LevelCompletion, DIFFICULTY_SYSTEM_CHOICES
+from .profanity import find_profanity
 
 class LevelForm(forms.ModelForm):
     difficulty = forms.DecimalField(
@@ -19,6 +20,24 @@ class LevelForm(forms.ModelForm):
     def clean_difficulty(self):
         value = self.cleaned_data["difficulty"]
         return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+    def _validate_clean_text(self, value, label):
+        matched_word = find_profanity(value or "")
+        if matched_word:
+            raise forms.ValidationError(f"{label} contains blocked language.")
+        return value
+
+    def clean_name(self):
+        return self._validate_clean_text(self.cleaned_data.get("name"), "Name")
+
+    def clean_level_code(self):
+        return self._validate_clean_text(self.cleaned_data.get("level_code"), "Level code")
+
+    def clean_original_uploader(self):
+        return self._validate_clean_text(self.cleaned_data.get("original_uploader"), "Original uploader")
+
+    def clean_description(self):
+        return self._validate_clean_text(self.cleaned_data.get("description"), "Description")
 
     class Meta:
         model = Level
@@ -67,6 +86,13 @@ class LevelCompletionForm(forms.ModelForm):
         help_text='Provide proof for this completion (max 5000 characters).',
     )
 
+    def clean_proof(self):
+        value = self.cleaned_data.get('proof')
+        matched_word = find_profanity(value or '')
+        if matched_word:
+            raise forms.ValidationError('Proof contains blocked language.')
+        return value
+
 
 class ProfilePublicForm(forms.ModelForm):
     class Meta:
@@ -92,6 +118,27 @@ class ProfilePublicForm(forms.ModelForm):
         help_text='Tell others about yourself (max 2000 characters).',
         widget=forms.Textarea(attrs={'rows': 5, 'maxlength': 2000}),
     )
+
+    def clean_display_name(self):
+        value = self.cleaned_data.get('display_name')
+        matched_word = find_profanity(value or '')
+        if matched_word:
+            raise forms.ValidationError('Display name contains blocked language.')
+        return value
+
+    def clean_bio(self):
+        value = self.cleaned_data.get('bio')
+        matched_word = find_profanity(value or '')
+        if matched_word:
+            raise forms.ValidationError('Bio contains blocked language.')
+        return value
+
+    def clean_scratch_username(self):
+        value = self.cleaned_data.get('scratch_username')
+        matched_word = find_profanity(value or '')
+        if matched_word:
+            raise forms.ValidationError('Scratch username contains blocked language.')
+        return value
 
 
 class CaseInsensitiveUserCreationForm(UserCreationForm):
