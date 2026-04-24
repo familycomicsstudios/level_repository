@@ -11,17 +11,6 @@
     <!-- Bootstrap CSS CDN -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
     <link rel="stylesheet" href="{% static 'css/style.css' %}" />
-    <!-- Dark theme CSS (conditionally loaded) -->
-    {% if dark_mode %}<link rel="stylesheet" href="{% static 'css/dark.css' %}" />{% endif %}
-    <script>
-        // Apply dark mode on page load if user preference exists
-        document.addEventListener('DOMContentLoaded', function() {
-            const darkModeEnabled = {% if dark_mode %}true{% else %}false{% endif %};
-            if (darkModeEnabled) {
-                document.body.classList.add('dark-mode');
-            }
-        });
-    </script>
 </head>
 <body>
     <!-- Navigation Bar -->
@@ -34,6 +23,11 @@
             <ul class="navbar-nav ml-auto">
                 {% if user.is_authenticated %}
                     <li class="nav-item"><a class="nav-link" href="{% url 'levels:upload' %}">Upload Level</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'levels:my_completion_submissions' %}">My Submissions</a></li>
+                    {% if user.is_staff %}
+                    <li class="nav-item"><a class="nav-link" href="{% url 'levels:admin_completion_triage' %}">Completion Triage</a></li>
+                    {% endif %}
+                    <li class="nav-item"><a class="nav-link" href="{% url 'levels:user_profile' user.username %}">My Profile</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'levels:user_settings' %}">Settings</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'levels:logout' %}">Logout</a></li>
                 {% else %}

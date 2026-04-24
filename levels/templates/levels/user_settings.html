@@ -17,14 +17,6 @@
                 {{ form.difficulty_system }}
                 <small class="form-text text-muted d-block">{{ form.difficulty_system.help_text }}</small>
             </div>
-
-            <div class="form-group">
-                <div class="form-check">
-                    {{ form.dark_mode }}
-                    <label class="form-check-label" for="id_dark_mode">{{ form.dark_mode.label }}</label>
-                </div>
-                <small class="form-text text-muted d-block">{{ form.dark_mode.help_text }}</small>
-            </div>
         </fieldset>
 
         <button type="submit" class="btn btn-primary">Save Settings</button>
@@ -32,8 +24,7 @@
 
     <div class="mt-4 alert alert-info">
         <strong>Current Settings:</strong><br>
-        Difficulty Scale: <span class="badge badge-info">{{ difficulty_system|difficulty_system_label }}</span><br>
-        Theme: <span class="badge badge-{% if dark_mode %}secondary{% else %}light{% endif %}">{% if dark_mode %}Dark{% else %}Light{% endif %}</span>
+        Difficulty Scale: <span class="badge badge-info">{{ difficulty_system|difficulty_system_label }}</span>
     </div>
 </div>
 {% endblock %}

@@ -6,17 +6,56 @@
 {% block title %}{{ user_profile.username }}{% endblock %}
 
 {% block content %}
-<h1>Profile of {{ user_profile.username }}</h1>
-<p>Date Joined: {{ user_profile.date_joined }}</p>
-<p>Explosions: {{ profile.stats.explosions }}</p>
-<p>Difficulty display: {{ profile.difficulty_system|difficulty_system_label }}</p>
-<h2>Levels Completed</h2>
-<ul>
-{% for level_id in profile.stats.levels_completed %}
-{% get_level_by_id level_id as level %}
-<li><a href="{% url 'levels:level_detail' level_id %}">{{ level }}</a></li>
-{% empty %}
-<li>None</li>
-{% endfor %}
-</ul>
+<div class="bubble-section">
+	<h1>
+		{% if profile.display_name %}
+			{{ profile.display_name }}
+		{% else %}
+			{{ user_profile.username }}
+		{% endif %}
+	</h1>
+	<p><strong>Account:</strong> {{ user_profile.username }}</p>
+	<p><strong>Date Joined:</strong> {{ user_profile.date_joined }}</p>
+	<p><strong>Total Completions:</strong> {{ total_completions }}</p>
+	{% if profile.bio %}
+	<p class="mb-0"><strong>Bio:</strong> {{ profile.bio }}</p>
+	{% else %}
+	<p class="mb-0"><strong>Bio:</strong> No bio set.</p>
+	{% endif %}
+	{% if user.is_authenticated and user.username == user_profile.username %}
+	<div class="bubble-actions mt-3">
+		<a href="{% url 'levels:edit_profile' user_profile.username %}" class="btn btn-primary">Edit Profile</a>
+	</div>
+	{% endif %}
+</div>
+
+<div class="bubble-section">
+	<h2>Uploaded Levels</h2>
+	<p>Levels uploaded on this account where no original uploader is set.</p>
+	<ul class="mb-0">
+	{% for level in uploaded_levels %}
+		<li>
+			<a href="{% url 'levels:level_detail' level.id %}">{{ level.name }}</a>
+			- {% if level.difficulty_rating is not None %}{{ level.difficulty_rating|display_difficulty:profile.difficulty_system }}{% else %}Not rated{% endif %}
+		</li>
+	{% empty %}
+		<li>None</li>
+	{% endfor %}
+	</ul>
+</div>
+
+<div class="bubble-section">
+	<h2>Levels Completed</h2>
+	<ul class="mb-0">
+	{% for submission in approved_submissions %}
+	<li>
+		<a href="{% url 'levels:level_detail' submission.level.id %}">{{ submission.level.name }}</a>
+		by
+		<a href="{% url 'levels:user_profile' submission.user.username %}">{{ submission.user.username }}</a>
+	</li>
+	{% empty %}
+	<li>None</li>
+	{% endfor %}
+	</ul>
+</div>
 {% endblock %}

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Submit Completion{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="bubble-section">
+        <h2>Submit Level Completion</h2>
+        <p class="mb-2"><strong>Username:</strong> {{ user.username }}</p>
+        <p class="mb-3"><strong>Level:</strong> <a href="{% url 'levels:level_detail' level.id %}">{{ level.name }}</a></p>
+
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="bubble-actions">
+                <button type="submit" class="btn btn-primary">Submit for Review</button>
+                <a href="{% url 'levels:level_detail' level.id %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+
+        <p class="text-muted mt-3 mb-0">Submitting sends this completion to admins for triage. Resubmitting updates your existing submission and sets it back to pending.</p>
+    </div>
+</div>
+{% endblock %}

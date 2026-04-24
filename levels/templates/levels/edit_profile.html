@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Profile{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="bubble-section">
+        <h2>Edit Profile</h2>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="bubble-actions">
+                <button type="submit" class="btn btn-primary">Save Profile</button>
+                <a href="{% url 'levels:user_profile' user_profile.username %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

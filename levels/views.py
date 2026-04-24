@@ -1,13 +1,15 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from .models import Level, Comment
+from .models import Level, Comment, LevelRating, LevelCompletion
 from django.contrib.auth.models import User
-from .forms import LevelForm, ProfileSettingsForm
+from .forms import LevelForm, ProfileSettingsForm, LevelRatingForm, LevelCompletionForm, ProfilePublicForm
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.views import LoginView
 import django.contrib.auth
 from django.shortcuts import get_object_or_404
 from django.core.paginator import Paginator
+from django.db.models import Q
+from django.http import HttpResponseForbidden
 
 
 
@@ -15,12 +17,38 @@ def level_detail(request, level_id):
     level = get_object_or_404(Level, id=level_id)  # Fetch the level by its ID
     comments = level.comments.all()
     difficulty_system = request.user.profile.difficulty_system if request.user.is_authenticated else 'punter'
+    user_level_rating = None
+    user_completion = None
+
+    if request.user.is_authenticated:
+        user_level_rating = LevelRating.objects.filter(level=level, user=request.user).first()
+        user_completion = LevelCompletion.objects.filter(level=level, user=request.user).first()
+
+    rating_form = LevelRatingForm(instance=user_level_rating)
 
     if request.method == "POST":
-        content = request.POST.get("content")
-        if content:
-            Comment.objects.create(level=level, user=request.user, content=content)
-            return redirect('levels:level_detail', level_id=level_id)
+        action = request.POST.get("action")
+
+        if action == "rate":
+            if not request.user.is_authenticated:
+                return redirect('levels:login')
+
+            rating_form = LevelRatingForm(request.POST, instance=user_level_rating)
+            if rating_form.is_valid():
+                rating = rating_form.save(commit=False)
+                rating.level = level
+                rating.user = request.user
+                rating.save()
+                level.refresh_rating_averages()
+                return redirect('levels:level_detail', level_id=level_id)
+        else:
+            if not request.user.is_authenticated:
+                return redirect('levels:login')
+
+            content = request.POST.get("content")
+            if content:
+                Comment.objects.create(level=level, user=request.user, content=content)
+                return redirect('levels:level_detail', level_id=level_id)
 
     return render(
         request,
@@ -29,6 +57,10 @@ def level_detail(request, level_id):
             'level': level,
             'comments': comments,
             'difficulty_system': difficulty_system,
+            'rating_form': rating_form,
+            'user_level_rating': user_level_rating,
+            'user_completion': user_completion,
+            'ratings_count': level.ratings.count(),
         },
     )
 
@@ -41,6 +73,17 @@ def upload_level(request):
             level = form.save(commit=False)
             level.creator = request.user
             level.save()
+
+            first_difficulty_rating = int(round(level.difficulty))
+            first_difficulty_rating = max(0, min(first_difficulty_rating, 15))
+            LevelRating.objects.create(
+                level=level,
+                user=request.user,
+                difficulty_rating=first_difficulty_rating,
+                quality_rating=None,
+            )
+            level.refresh_rating_averages()
+
             return redirect('levels:list')
     else:
         form = LevelForm()
@@ -53,8 +96,8 @@ def level_list(request):
     levels = Level.objects.all()
 
     # Sorting functionality
-    sort_by = request.GET.get('sort', 'name')  # Default sorting by name
-    sort_direction = request.GET.get('direction', 'asc')  # Default sorting direction
+    sort_by = request.GET.get('sort', 'difficulty')
+    sort_direction = request.GET.get('direction', 'desc')
 
     if sort_by == 'creator':
         # Sort by original_uploader if it exists, otherwise by creator username
@@ -69,7 +112,13 @@ def level_list(request):
             levels = levels.order_by('-display_creator')
         else:
             levels = levels.order_by('display_creator')
-    elif sort_by in ['name', 'difficulty', 'rated_difficulty', 'mod_category']:
+    elif sort_by == 'difficulty':
+        levels = levels.annotate(display_difficulty=Coalesce('difficulty_rating', 'difficulty'))
+        if sort_direction == 'desc':
+            levels = levels.order_by('-display_difficulty')
+        else:
+            levels = levels.order_by('display_difficulty')
+    elif sort_by in ['name', 'mod_category', 'quality_rating']:
         if sort_direction == 'desc':
             levels = levels.order_by(f'-{sort_by}')  # Descending order
         else:
@@ -141,7 +190,130 @@ def delete_level(request, level_id):
 def user_profile(request, username):
     user = get_object_or_404(User, username=username)
     profile = user.profile  # Access the profile of the logged-in user
-    return render(request, "levels/user_profile.html", {"user_profile": user, "profile": profile})
+    uploaded_levels = Level.objects.filter(creator=user).filter(
+        Q(original_uploader__isnull=True) | Q(original_uploader__exact='')
+    ).order_by('-created_at')
+    approved_submissions = LevelCompletion.objects.filter(
+        user=user,
+        status=LevelCompletion.STATUS_APPROVED,
+    ).select_related('level', 'user').order_by('-reviewed_at', '-submitted_at')
+
+    total_completions = approved_submissions.count()
+
+    return render(
+        request,
+        "levels/user_profile.html",
+        {
+            "user_profile": user,
+            "profile": profile,
+            "uploaded_levels": uploaded_levels,
+            "approved_submissions": approved_submissions,
+            "total_completions": total_completions,
+        },
+    )
+
+
+@login_required
+def edit_profile(request, username):
+    if request.user.username != username:
+        return HttpResponseForbidden('You can only edit your own profile.')
+
+    profile = request.user.profile
+
+    if request.method == 'POST':
+        form = ProfilePublicForm(request.POST, instance=profile)
+        if form.is_valid():
+            form.save()
+            return redirect('levels:user_profile', username=request.user.username)
+    else:
+        form = ProfilePublicForm(instance=profile)
+
+    return render(
+        request,
+        'levels/edit_profile.html',
+        {
+            'form': form,
+            'user_profile': request.user,
+        },
+    )
+
+
+@login_required
+def submit_level_completion(request, level_id):
+    level = get_object_or_404(Level, id=level_id)
+    completion, _ = LevelCompletion.objects.get_or_create(
+        level=level,
+        user=request.user,
+        defaults={
+            'proof': '',
+            'status': LevelCompletion.STATUS_PENDING,
+            'reviewed_at': None,
+            'reviewed_by': None,
+        },
+    )
+
+    if request.method == 'POST':
+        form = LevelCompletionForm(request.POST, instance=completion)
+        if form.is_valid():
+            completion = form.save(commit=False)
+            completion.user = request.user
+            completion.level = level
+            completion.status = LevelCompletion.STATUS_PENDING
+            completion.reviewed_at = None
+            completion.reviewed_by = None
+            completion.save()
+            return redirect('levels:level_detail', level_id=level.id)
+    else:
+        form = LevelCompletionForm(instance=completion)
+
+    return render(
+        request,
+        'levels/submit_level_completion.html',
+        {
+            'level': level,
+            'completion': completion,
+            'form': form,
+        },
+    )
+
+
+@login_required
+def my_completion_submissions(request):
+    submissions = LevelCompletion.objects.filter(user=request.user).order_by('-submitted_at')
+    return render(
+        request,
+        'levels/my_completion_submissions.html',
+        {
+            'submissions': submissions,
+        },
+    )
+
+
+@login_required
+def admin_completion_triage(request):
+    if not request.user.is_staff:
+        return HttpResponseForbidden('Admin access required.')
+
+    if request.method == 'POST':
+        completion_id = request.POST.get('completion_id')
+        decision = request.POST.get('decision')
+        completion = get_object_or_404(LevelCompletion, id=completion_id)
+
+        if decision == 'approve':
+            completion.approve(reviewer=request.user)
+        elif decision == 'reject':
+            completion.reject(reviewer=request.user)
+
+        return redirect('levels:admin_completion_triage')
+
+    submissions = LevelCompletion.objects.select_related('user', 'level', 'reviewed_by').order_by('-submitted_at')
+    return render(
+        request,
+        'levels/admin_completion_triage.html',
+        {
+            'submissions': submissions,
+        },
+    )
 
 @login_required
 def edit_comment(request, comment_id):

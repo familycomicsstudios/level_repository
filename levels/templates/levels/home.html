@@ -12,5 +12,8 @@
         <a class="btn btn-secondary btn-lg" href="{% url 'levels:signup' %}" role="button">Sign Up</a>
     {% endif %}
     <a class="btn btn-primary btn-lg" href="{% url 'levels:info_page' %}" role="button">Rules</a>
+    {% if user.is_authenticated and user.is_staff %}
+        <a class="btn btn-danger btn-lg" href="{% url 'levels:admin_completion_triage' %}" role="button">Completion Triage</a>
+    {% endif %}
 </div>
 {% endblock %}
