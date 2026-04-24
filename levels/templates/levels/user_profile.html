@@ -1,27 +1,40 @@
 {% extends "base.html" %}
 
-{% load level_tags %}
+{% load level_tags static %}
 
 
 {% block title %}{{ user_profile.username }}{% endblock %}
 
 {% block content %}
 <div class="bubble-section">
-	<h1>
-		{% if profile.display_name %}
-			{{ profile.display_name }}
-		{% else %}
-			{{ user_profile.username }}
-		{% endif %}
-		{% if user_profile.is_staff or user_profile.is_superuser %}
-			<span class="badge bg-danger align-middle ms-2">Admin</span>
-		{% endif %}
-	</h1>
-	<p>
-		<strong>Username: </strong> {{ user_profile.username }}<br>
-		<strong>Date Joined:</strong> {{ user_profile.date_joined }}<br>
-		<strong>Total Completions:</strong> {{ total_completions }}<br>
-	</p>
+	<div class="d-flex flex-wrap align-items-start" style="gap: 16px;">
+		<img
+			id="scratch-avatar"
+			src="{% static 'icon.png' %}"
+			alt="{{ user_profile.username }} profile picture"
+			style="width: 96px; height: 96px; border-radius: 16px; object-fit: cover; border: 2px solid rgba(0, 0, 0, 0.08);"
+		>
+		<div>
+			<h1>
+				{% if profile.display_name %}
+					{{ profile.display_name }}
+				{% else %}
+					{{ user_profile.username }}
+				{% endif %}
+				{% if user_profile.is_staff or user_profile.is_superuser %}
+					<span class="badge bg-danger align-middle ms-2">Admin</span>
+				{% endif %}
+			</h1>
+			<p>
+				<strong>Username: </strong> {{ user_profile.username }}<br>
+				<strong>Date Joined:</strong> {{ user_profile.date_joined }}<br>
+				<strong>Total Completions:</strong> {{ total_completions }}<br>
+				{% if profile.scratch_username %}
+				<strong>Scratch:</strong> <a href="https://scratch.mit.edu/users/{{ profile.scratch_username|urlencode }}/" target="_blank" rel="noopener noreferrer">@{{ profile.scratch_username }}</a><br>
+				{% endif %}
+			</p>
+		</div>
+	</div>
 	{% if profile.bio %}
 	<p class="mb-0"><strong></strong> {{ profile.bio }}</p>
 	{% else %}
@@ -63,4 +76,37 @@
 	{% endfor %}
 	</ul>
 </div>
+
+{% if profile.scratch_username %}
+<script>
+	(function () {
+		const scratchUsername = "{{ profile.scratch_username|escapejs }}";
+		const avatar = document.getElementById("scratch-avatar");
+		if (!scratchUsername || !avatar) {
+			return;
+		}
+
+		const scratchApiUrl = "https://api.scratch.mit.edu/users/" + encodeURIComponent(scratchUsername);
+		const corsUrl = "https://cloudflare-cors-anywhere.themadpunter10.workers.dev/?" + encodeURIComponent(scratchApiUrl);
+
+		fetch(corsUrl)
+			.then(function (response) {
+				if (!response.ok) {
+					throw new Error("Scratch API request failed");
+				}
+				return response.json();
+			})
+			.then(function (data) {
+				const images = data && data.profile ? data.profile.images : null;
+				const pfp = images ? (images["90x90"] || images["60x60"] || images["55x55"] || images["50x50"] || images["32x32"]) : null;
+				if (pfp) {
+					avatar.src = pfp;
+				}
+			})
+			.catch(function () {
+				// Keep local fallback image if Scratch fetch fails.
+			});
+	})();
+</script>
+{% endif %}
 {% endblock %}

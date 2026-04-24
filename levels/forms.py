@@ -71,13 +71,19 @@ class LevelCompletionForm(forms.ModelForm):
 class ProfilePublicForm(forms.ModelForm):
     class Meta:
         model = Profile
-        fields = ['display_name', 'bio']
+        fields = ['display_name', 'scratch_username', 'bio']
 
     display_name = forms.CharField(
         required=False,
         max_length=100,
         label='Display name',
         help_text='Optional public display name shown on your profile.',
+    )
+    scratch_username = forms.CharField(
+        required=False,
+        max_length=100,
+        label='Scratch username',
+        help_text='Used to load your Scratch profile picture.',
     )
     bio = forms.CharField(
         required=False,

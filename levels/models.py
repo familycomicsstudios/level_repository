@@ -79,6 +79,7 @@ class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     stats = models.JSONField(default=default_profile_stats)
     display_name = models.CharField(max_length=100, blank=True, default='')
+    scratch_username = models.CharField(max_length=100, blank=True, default='')
     bio = models.TextField(max_length=2000, blank=True, default='')
     difficulty_system = models.CharField(
         max_length=20,

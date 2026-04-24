@@ -133,7 +133,19 @@ def level_list(request):
             levels = levels.order_by('-display_difficulty')
         else:
             levels = levels.order_by('display_difficulty')
-    elif sort_by in ['name', 'mod_category', 'quality_rating', 'created_at']:
+    elif sort_by == 'quality_rating':
+        # Keep unrated levels below rated ones when sorting by quality.
+        levels = levels.annotate(
+            has_quality=Case(
+                When(quality_rating__isnull=True, then=Value(1)),
+                default=Value(0),
+            )
+        )
+        if sort_direction == 'desc':
+            levels = levels.order_by('has_quality', '-quality_rating')
+        else:
+            levels = levels.order_by('has_quality', 'quality_rating')
+    elif sort_by in ['name', 'mod_category', 'created_at']:
         if sort_direction == 'desc':
             levels = levels.order_by(f'-{sort_by}')  # Descending order
         else:
