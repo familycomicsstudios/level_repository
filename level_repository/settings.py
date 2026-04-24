@@ -82,10 +82,10 @@ WSGI_APPLICATION = 'level_repository.wsgi.application'
 
 # Use PostgreSQL in production (Vercel) or when explicitly enabled
 if os.getenv("VERCEL") or os.getenv("USE_POSTGRES"):
-    database_url = os.getenv("DATABASE_URL")
+    database_url = os.getenv("DATABASE_URL") or os.getenv("POSTGRES_URL")
 
     if not database_url:
-        raise ValueError("DATABASE_URL is not set for production.")
+        raise ValueError("DATABASE_URL/POSTGRES_URL is not set for production.")
 
     DATABASES = {
         "default": dj_database_url.parse(
