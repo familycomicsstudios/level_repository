@@ -16,6 +16,13 @@
   ],
   "routes": [
     {
+      "src": "/static/(.*)",
+      "dest": "/$1"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
       "src": "/(.*)",
       "dest": "level_repository/wsgi.py"
     }
