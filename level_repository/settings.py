@@ -80,25 +80,26 @@ WSGI_APPLICATION = 'level_repository.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
-# Use PostgreSQL (Supabase) only on Vercel, SQLite locally
-if os.getenv('VERCEL') or os.getenv('USE_POSTGRES'):
-    # Clean up the POSTGRES_URL - remove invalid 'supa' parameter from Vercel default
-    postgres_url = os.getenv('POSTGRES_URL')
-    if postgres_url and '&supa=' in postgres_url:
-        postgres_url = postgres_url.split('&supa=')[0]
-    
+# Use PostgreSQL in production (Vercel) or when explicitly enabled
+if os.getenv("VERCEL") or os.getenv("USE_POSTGRES"):
+    database_url = os.getenv("DATABASE_URL")
+
+    if not database_url:
+        raise ValueError("DATABASE_URL is not set for production.")
+
     DATABASES = {
-        'default': dj_database_url.config(
-            default=postgres_url,
+        "default": dj_database_url.parse(
+            database_url,
             conn_max_age=600,
             conn_health_checks=True,
+            ssl_require=True,
         )
     }
 else:
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
         }
     }
 
