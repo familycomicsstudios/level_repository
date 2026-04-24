@@ -5,7 +5,6 @@ other systems (Michael Chan, Grassy) anywhere in the app.
 """
 from __future__ import annotations
 
-from urllib.parse import quote
 from typing import Iterable, Tuple
 import math
 from django.templatetags.static import static
@@ -114,7 +113,7 @@ def grassy_icon_path(visual: str) -> str | None:
     known = {name for _, name in GRASSY_VISUALS} | {"Grandmaster IV", "Grandmaster V"}
     if visual not in known:
         return None
-    return static(f"img/grassy-scale/{quote(visual)}.svg")
+    return static(f"img/grassy-scale/{visual}.svg")
 
 
 def to_visual(value: Number, system: str) -> str:
