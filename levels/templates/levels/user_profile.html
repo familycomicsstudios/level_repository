@@ -64,12 +64,12 @@
 
 <div class="bubble-section">
 	<h2>Levels Completed</h2>
+	<p>Shown hardest to easiest.</p>
 	<ul class="mb-0">
 	{% for submission in approved_submissions %}
 	<li>
 		<a href="{% url 'levels:level_detail' submission.level.id %}">{{ submission.level.name }}</a>
-		by
-		<a href="{% url 'levels:user_profile' submission.user.username %}">{{ submission.user.username }}</a>
+		- {{ submission.completion_difficulty|display_difficulty:profile.difficulty_system }}
 	</li>
 	{% empty %}
 	<li>None</li>

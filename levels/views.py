@@ -228,6 +228,8 @@ def delete_level(request, level_id):
 
 
 def user_profile(request, username):
+    from django.db.models.functions import Coalesce
+
     user = get_object_or_404(User, username__iexact=username)
     profile = user.profile  # Access the profile of the logged-in user
     uploaded_levels = Level.objects.filter(creator=user).filter(
@@ -236,7 +238,9 @@ def user_profile(request, username):
     approved_submissions = LevelCompletion.objects.filter(
         user=user,
         status=LevelCompletion.STATUS_APPROVED,
-    ).select_related('level', 'user').order_by('-reviewed_at', '-submitted_at')
+    ).select_related('level', 'user', 'level__creator').annotate(
+        completion_difficulty=Coalesce('level__difficulty_rating', 'level__difficulty')
+    ).order_by('-completion_difficulty', 'level__name')
 
     total_completions = approved_submissions.count()
 
@@ -298,10 +302,19 @@ def submit_level_completion(request, level_id):
             completion = form.save(commit=False)
             completion.user = request.user
             completion.level = level
-            completion.status = LevelCompletion.STATUS_PENDING
-            completion.reviewed_at = None
-            completion.reviewed_by = None
-            completion.save()
+
+            if float(level.difficulty) < 5:
+                completion.status = LevelCompletion.STATUS_APPROVED
+                completion.reviewed_at = None
+                completion.reviewed_by = None
+                completion.save()
+                completion.approve(reviewer=None)
+            else:
+                completion.status = LevelCompletion.STATUS_PENDING
+                completion.reviewed_at = None
+                completion.reviewed_by = None
+                completion.save()
+
             return redirect('levels:level_detail', level_id=level.id)
     else:
         form = LevelCompletionForm(instance=completion)
