@@ -2,14 +2,29 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from .models import Level, Comment, LevelRating, LevelCompletion
 from django.contrib.auth.models import User
-from .forms import LevelForm, ProfileSettingsForm, LevelRatingForm, LevelCompletionForm, ProfilePublicForm
-from django.contrib.auth.forms import UserCreationForm
+from .forms import (
+    LevelForm,
+    ProfileSettingsForm,
+    LevelRatingForm,
+    LevelCompletionForm,
+    ProfilePublicForm,
+    CaseInsensitiveUserCreationForm,
+    CaseInsensitiveAuthenticationForm,
+)
 from django.contrib.auth.views import LoginView
 import django.contrib.auth
 from django.shortcuts import get_object_or_404
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import HttpResponseForbidden
+
+
+def error_404(request, exception):
+    return render(request, '404.html', status=404)
+
+
+def error_500(request):
+    return render(request, '500.html', status=500)
 
 
 
@@ -145,17 +160,18 @@ def home(request):
 
 def signup(request):
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = CaseInsensitiveUserCreationForm(request.POST)
         if form.is_valid():
             form.save()
             return redirect('login')
     else:
-        form = UserCreationForm()
+        form = CaseInsensitiveUserCreationForm()
     return render(request, 'registration/signup.html', {'form': form})
 
 
 class CustomLoginView(LoginView):
     template_name = 'registration/login.html'
+    authentication_form = CaseInsensitiveAuthenticationForm
 
 def logout(request):
     django.contrib.auth.logout(request)
@@ -188,7 +204,7 @@ def delete_level(request, level_id):
 
 
 def user_profile(request, username):
-    user = get_object_or_404(User, username=username)
+    user = get_object_or_404(User, username__iexact=username)
     profile = user.profile  # Access the profile of the logged-in user
     uploaded_levels = Level.objects.filter(creator=user).filter(
         Q(original_uploader__isnull=True) | Q(original_uploader__exact='')
@@ -215,7 +231,7 @@ def user_profile(request, username):
 
 @login_required
 def edit_profile(request, username):
-    if request.user.username != username:
+    if request.user.username.lower() != username.lower():
         return HttpResponseForbidden('You can only edit your own profile.')
 
     profile = request.user.profile

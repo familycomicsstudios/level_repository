@@ -1,5 +1,8 @@
 from django import forms
 from decimal import Decimal, ROUND_HALF_UP
+from django.contrib.auth import authenticate
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.models import User
 from .models import Level, Profile, LevelRating, LevelCompletion, DIFFICULTY_SYSTEM_CHOICES
 
 class LevelForm(forms.ModelForm):
@@ -83,3 +86,27 @@ class ProfilePublicForm(forms.ModelForm):
         help_text='Tell others about yourself (max 2000 characters).',
         widget=forms.Textarea(attrs={'rows': 5, 'maxlength': 2000}),
     )
+
+
+class CaseInsensitiveUserCreationForm(UserCreationForm):
+    def clean_username(self):
+        username = (self.cleaned_data.get('username') or '').strip()
+        if User.objects.filter(username__iexact=username).exists():
+            raise forms.ValidationError('A user with that username already exists.')
+        return username
+
+
+class CaseInsensitiveAuthenticationForm(AuthenticationForm):
+    def clean(self):
+        username = (self.cleaned_data.get('username') or '').strip()
+        password = self.cleaned_data.get('password')
+
+        if username and password:
+            canonical_user = User.objects.filter(username__iexact=username).first()
+            auth_username = canonical_user.username if canonical_user else username
+            self.user_cache = authenticate(self.request, username=auth_username, password=password)
+            if self.user_cache is None:
+                raise self.get_invalid_login_error()
+            self.confirm_login_allowed(self.user_cache)
+
+        return self.cleaned_data
