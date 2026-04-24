@@ -14,8 +14,46 @@ from pathlib import Path
 from dotenv import load_dotenv
 import os
 import dj_database_url
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 load_dotenv()
+
+
+def env_flag(name: str, default: bool = False) -> bool:
+    """Parse common truthy/falsey env var values safely."""
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "t", "yes", "y", "on"}
+
+
+def sanitize_postgres_url(url: str) -> str:
+    """Drop unsupported postgres query params that can break psycopg2 DSN parsing."""
+    parts = urlsplit(url)
+    if parts.scheme not in {"postgres", "postgresql"}:
+        return url
+
+    allowed_query_keys = {
+        "sslmode",
+        "application_name",
+        "connect_timeout",
+        "options",
+        "target_session_attrs",
+        "gssencmode",
+        "keepalives",
+        "keepalives_idle",
+        "keepalives_interval",
+        "keepalives_count",
+        "channel_binding",
+    }
+    blocked_prefixes = ("supa",)
+
+    filtered_query = [
+        (k, v)
+        for k, v in parse_qsl(parts.query, keep_blank_values=True)
+        if k in allowed_query_keys and not k.lower().startswith(blocked_prefixes)
+    ]
+    return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(filtered_query), parts.fragment))
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -80,21 +118,38 @@ WSGI_APPLICATION = 'level_repository.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
-# Use PostgreSQL in production (Vercel) or when explicitly enabled
-if os.getenv("VERCEL") or os.getenv("USE_POSTGRES"):
-    database_url = os.getenv("DATABASE_URL") or os.getenv("POSTGRES_URL")
+# Use PostgreSQL in production (Vercel) or when explicitly enabled.
+if env_flag("VERCEL") or env_flag("USE_POSTGRES"):
+    # Prefer explicit Postgres var first, then generic DATABASE_URL.
+    database_url_candidates = [
+        os.getenv("POSTGRES_URL"),
+        os.getenv("DATABASE_URL"),
+    ]
+    database_urls = [url for url in database_url_candidates if url]
 
-    if not database_url:
+    if not database_urls:
         raise ValueError("DATABASE_URL/POSTGRES_URL is not set for production.")
 
-    DATABASES = {
-        "default": dj_database_url.parse(
-            database_url,
-            conn_max_age=600,
-            conn_health_checks=True,
-            ssl_require=True,
-        )
-    }
+    last_error = None
+    for raw_url in database_urls:
+        try:
+            database_url = sanitize_postgres_url(raw_url)
+            DATABASES = {
+                "default": dj_database_url.parse(
+                    database_url,
+                    conn_max_age=600,
+                    conn_health_checks=True,
+                    ssl_require=True,
+                )
+            }
+            break
+        except Exception as exc:
+            last_error = exc
+    else:
+        raise ValueError(
+            "Could not parse a valid PostgreSQL connection string from POSTGRES_URL or DATABASE_URL. "
+            "Check Vercel environment variables."
+        ) from last_error
 else:
     DATABASES = {
         "default": {
