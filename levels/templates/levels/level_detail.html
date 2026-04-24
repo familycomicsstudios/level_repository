@@ -7,7 +7,7 @@
 {% block content %}
 <div class="container">
     <div class="bubble-section">
-        <h2 class="mb-2">{{ level.name }} by {% if level.original_uploader %}{{ level.original_uploader }}{% else %}<a href="{% url 'levels:user_profile' level.creator.username %}">{{ level.creator.username }}</a>{% endif %}</h2>
+        <h2 class="mb-2">{{ level.name }} by {% if level.original_uploader %}{{ level.original_uploader }}{% else %}<a href="{% url 'levels:user_profile' level.creator.username %}">{{ level.creator|display_name_or_username }}</a>{% endif %}</h2>
 
         <div class="bubble-actions mb-3">
             <a href="{% url 'levels:list' %}" class="btn btn-secondary">Back to Levels</a>
@@ -22,7 +22,7 @@
 
         <p><strong>Mod Category:</strong> {{ level.get_mod_category_display }}</p>
         {% if level.original_uploader %}
-        <p><strong>Uploader: </strong><a href="{% url 'levels:user_profile' level.creator.username %}">{{ level.creator.username }}</a></p>
+        <p><strong>Uploader: </strong><a href="{% url 'levels:user_profile' level.creator.username %}">{{ level.creator|display_name_or_username }}</a></p>
         {% endif %}
         <p>{{ level.description }}</p>
         {% if user.is_authenticated and user_completion %}

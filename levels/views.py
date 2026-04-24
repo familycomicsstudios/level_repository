@@ -74,7 +74,7 @@ def upload_level(request):
             level.creator = request.user
             level.save()
 
-            first_difficulty_rating = int(round(level.difficulty))
+            first_difficulty_rating = round(float(level.difficulty), 2)
             first_difficulty_rating = max(0, min(first_difficulty_rating, 15))
             LevelRating.objects.create(
                 level=level,

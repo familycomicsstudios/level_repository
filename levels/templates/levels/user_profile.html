@@ -13,14 +13,19 @@
 		{% else %}
 			{{ user_profile.username }}
 		{% endif %}
+		{% if user_profile.is_staff or user_profile.is_superuser %}
+			<span class="badge bg-danger align-middle ms-2">Admin</span>
+		{% endif %}
 	</h1>
-	<p><strong>Account:</strong> {{ user_profile.username }}</p>
-	<p><strong>Date Joined:</strong> {{ user_profile.date_joined }}</p>
-	<p><strong>Total Completions:</strong> {{ total_completions }}</p>
+	<p>
+		<strong>Username: </strong> {{ user_profile.username }}<br>
+		<strong>Date Joined:</strong> {{ user_profile.date_joined }}<br>
+		<strong>Total Completions:</strong> {{ total_completions }}<br>
+	</p>
 	{% if profile.bio %}
-	<p class="mb-0"><strong>Bio:</strong> {{ profile.bio }}</p>
+	<p class="mb-0"><strong></strong> {{ profile.bio }}</p>
 	{% else %}
-	<p class="mb-0"><strong>Bio:</strong> No bio set.</p>
+	<p class="mb-0"><strong></strong> No bio set.</p>
 	{% endif %}
 	{% if user.is_authenticated and user.username == user_profile.username %}
 	<div class="bubble-actions mt-3">
@@ -31,7 +36,7 @@
 
 <div class="bubble-section">
 	<h2>Uploaded Levels</h2>
-	<p>Levels uploaded on this account where no original uploader is set.</p>
+	<p>Levels uploaded on this account that are created by this user.</p>
 	<ul class="mb-0">
 	{% for level in uploaded_levels %}
 		<li>

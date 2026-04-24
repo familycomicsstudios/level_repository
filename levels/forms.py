@@ -1,7 +1,22 @@
 from django import forms
+from decimal import Decimal, ROUND_HALF_UP
 from .models import Level, Profile, LevelRating, LevelCompletion, DIFFICULTY_SYSTEM_CHOICES
 
 class LevelForm(forms.ModelForm):
+    difficulty = forms.DecimalField(
+        max_digits=7,
+        decimal_places=2,
+        min_value=0,
+        max_value=99999,
+        label="Difficulty",
+        help_text="Use up to 2 decimal places.",
+        widget=forms.NumberInput(attrs={"step": "any", "inputmode": "decimal"}),
+    )
+
+    def clean_difficulty(self):
+        value = self.cleaned_data["difficulty"]
+        return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
     class Meta:
         model = Level
         fields = ['name', 'level_code', 'mod_category', 'difficulty', 'original_uploader', 'description']
@@ -12,10 +27,13 @@ class LevelRatingForm(forms.ModelForm):
         model = LevelRating
         fields = ['difficulty_rating', 'quality_rating']
 
-    difficulty_rating = forms.IntegerField(
+    difficulty_rating = forms.DecimalField(
+        max_digits=4,
+        decimal_places=2,
         min_value=0,
         max_value=15,
         label="Difficulty rating (Punter scale 0-15)",
+        widget=forms.NumberInput(attrs={"step": "any", "inputmode": "decimal"}),
     )
     quality_rating = forms.ChoiceField(
         choices=[(i, f"{i} star{'s' if i != 1 else ''}") for i in range(0, 6)],

@@ -47,3 +47,18 @@ def as_stars(value, max_stars=5):
     empty = numeric_max - filled
 
     return mark_safe("&#9733;" * filled + "&#9734;" * empty)
+
+
+@register.filter
+def display_name_or_username(user):
+    if not user:
+        return ""
+
+    try:
+        display_name = (user.profile.display_name or "").strip()
+        if display_name:
+            return display_name
+    except Exception:
+        pass
+
+    return user.username

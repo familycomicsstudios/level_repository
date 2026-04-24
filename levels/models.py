@@ -57,7 +57,11 @@ class Level(models.Model):
 class LevelRating(models.Model):
     level = models.ForeignKey(Level, on_delete=models.CASCADE, related_name='ratings')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='level_ratings')
-    difficulty_rating = models.PositiveSmallIntegerField(validators=[MinValueValidator(0), MaxValueValidator(15)])
+    difficulty_rating = models.DecimalField(
+        max_digits=4,
+        decimal_places=2,
+        validators=[MinValueValidator(0), MaxValueValidator(15)],
+    )
     quality_rating = models.PositiveSmallIntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(5)])
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
