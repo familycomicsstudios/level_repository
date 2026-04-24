@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from urllib.parse import quote
 from typing import Iterable, Tuple
+import math
 
 Number = float
 
@@ -130,12 +131,12 @@ def to_visual(value: Number, system: str) -> str:
 
     if system == "michaelchan":
         if value < 1:
-            return f"{int(value * 10)}⚡"
+            return f"{math.floor(value * 10)}⚡"
         if value < 10:
-            return f"{int(value)}💥"
+            return f"{math.floor(value)}💥"
         if value < 100:
-            return f"{int(value / 10)}💣"
-        return f"{int(value / 100)}🧨"
+            return f"{math.floor(value / 10)}💣"
+        return f"{math.floor(value / 100)}🧨"
 
     if system == "grassy":
         if value > 10.5:
@@ -175,14 +176,17 @@ def convert(value: Number, from_system: str, to_system: str) -> Number:
 def format_difficulty(value: Number, system: str) -> str:
     """Return a combined numeric/visual string for display."""
     numeric = convert(value, "punter", system)
+    if system == "michaelchan":
+        return to_visual(numeric, system)
     if system == "grassy":
         numeric = round(numeric, 2)
+        visual = to_visual(numeric, system)
+        icon = grassy_icon_path(visual)
+        if icon:
+            return f"<img src=\"{icon}\" alt=\"{visual}\" style=\"height:3.3em;vertical-align:text-bottom;\">"
+        return ""
     visual = to_visual(numeric, system)
     numeric_str = format_punter_number(numeric) if system == "punter" else format_number(numeric)
     if visual and visual != numeric_str:
-        if system == "grassy":
-            icon = grassy_icon_path(visual)
-            if icon:
-                return f"{numeric_str} ({visual}) <img src=\"{icon}\" alt=\"{visual}\" style=\"height:3.3em;vertical-align:text-bottom;\">"
         return f"{numeric_str} ({visual})"
     return numeric_str

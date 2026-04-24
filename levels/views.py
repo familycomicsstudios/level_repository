@@ -96,7 +96,7 @@ def level_list(request):
     levels = Level.objects.all()
 
     # Sorting functionality
-    sort_by = request.GET.get('sort', 'difficulty')
+    sort_by = request.GET.get('sort', 'quality_rating')
     sort_direction = request.GET.get('direction', 'desc')
 
     if sort_by == 'creator':
@@ -118,7 +118,7 @@ def level_list(request):
             levels = levels.order_by('-display_difficulty')
         else:
             levels = levels.order_by('display_difficulty')
-    elif sort_by in ['name', 'mod_category', 'quality_rating']:
+    elif sort_by in ['name', 'mod_category', 'quality_rating', 'created_at']:
         if sort_direction == 'desc':
             levels = levels.order_by(f'-{sort_by}')  # Descending order
         else:

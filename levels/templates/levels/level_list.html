@@ -12,6 +12,7 @@
         <div class="bubble-actions">
             <a href="?sort=difficulty&direction={% if sort_by == 'difficulty' and sort_direction == 'desc' %}asc{% else %}desc{% endif %}" class="btn btn-primary">Difficulty Rating</a>
             <a href="?sort=quality_rating&direction={% if sort_by == 'quality_rating' and sort_direction == 'desc' %}asc{% else %}desc{% endif %}" class="btn btn-primary">Quality Rating</a>
+            <a href="?sort=created_at&direction={% if sort_by == 'created_at' and sort_direction == 'desc' %}asc{% else %}desc{% endif %}" class="btn btn-primary">Date Added</a>
             <a href="?sort=name&direction={% if sort_by == 'name' and sort_direction == 'asc' %}desc{% else %}asc{% endif %}" class="btn btn-primary">Name</a>
             <a href="?sort=mod_category&direction={% if sort_by == 'mod_category' and sort_direction == 'asc' %}desc{% else %}asc{% endif %}" class="btn btn-primary">Mod</a>
             <a href="?sort=creator&direction={% if sort_by == 'creator' and sort_direction == 'asc' %}desc{% else %}asc{% endif %}" class="btn btn-primary">Creator</a>
