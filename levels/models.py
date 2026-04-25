@@ -1,6 +1,5 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.db.models import Avg
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
 
@@ -10,6 +9,20 @@ DIFFICULTY_SYSTEM_CHOICES = [
     ("michaelchan", "Michael Chan"),
     ("grassy", "Grassy"),
 ]
+
+
+def _median_value(values):
+    if not values:
+        return None
+
+    sorted_values = sorted(values)
+    count = len(sorted_values)
+    middle = count // 2
+
+    if count % 2 == 1:
+        return sorted_values[middle]
+
+    return (sorted_values[middle - 1] + sorted_values[middle]) / 2
 
 
 def default_profile_stats():
@@ -49,12 +62,18 @@ class Level(models.Model):
         return f"{self.name} - {self.creator.username}"
 
     def refresh_rating_averages(self):
-        aggregates = self.ratings.aggregate(
-            average_difficulty=Avg('difficulty_rating'),
-            average_quality=Avg('quality_rating'),
-        )
-        self.difficulty_rating = aggregates['average_difficulty']
-        self.quality_rating = aggregates['average_quality']
+        difficulty_values = [
+            float(value)
+            for value in self.ratings.values_list('difficulty_rating', flat=True)
+        ]
+        quality_values = [
+            float(value)
+            for value in self.ratings.values_list('quality_rating', flat=True)
+            if value is not None
+        ]
+
+        self.difficulty_rating = _median_value(difficulty_values)
+        self.quality_rating = _median_value(quality_values)
         self.save(update_fields=['difficulty_rating', 'quality_rating'])
 
 

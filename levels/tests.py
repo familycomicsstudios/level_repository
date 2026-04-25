@@ -40,7 +40,7 @@ class LevelRatingTests(TestCase):
         self.assertEqual(rating.difficulty_rating, 11)
         self.assertEqual(rating.quality_rating, 5)
 
-    def test_level_aggregate_ratings_are_updated(self):
+    def test_level_aggregate_ratings_use_median(self):
         other_rater = User.objects.create_user(username='other', password='pass12345')
 
         LevelRating.objects.create(level=self.level, user=self.rater, difficulty_rating=10, quality_rating=4)
@@ -51,6 +51,20 @@ class LevelRatingTests(TestCase):
 
         self.assertEqual(self.level.difficulty_rating, 12)
         self.assertEqual(self.level.quality_rating, 3)
+
+    def test_level_aggregate_ratings_use_middle_value_for_odd_count(self):
+        other_rater = User.objects.create_user(username='other2', password='pass12345')
+        third_rater = User.objects.create_user(username='other3', password='pass12345')
+
+        LevelRating.objects.create(level=self.level, user=self.rater, difficulty_rating=2, quality_rating=5)
+        LevelRating.objects.create(level=self.level, user=other_rater, difficulty_rating=14, quality_rating=1)
+        LevelRating.objects.create(level=self.level, user=third_rater, difficulty_rating=8, quality_rating=4)
+
+        self.level.refresh_rating_averages()
+        self.level.refresh_from_db()
+
+        self.assertEqual(self.level.difficulty_rating, 8)
+        self.assertEqual(self.level.quality_rating, 4)
 
     def test_level_list_defaults_to_difficulty_rating_sort_desc(self):
         level_b = Level.objects.create(
