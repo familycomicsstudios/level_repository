@@ -277,6 +277,21 @@ def level_list(request):
     
     levels = Level.objects.all()
 
+    search_query = request.GET.get('q', '').strip()
+    if search_query:
+        levels = levels.filter(
+            Q(name__icontains=search_query)
+            | Q(description__icontains=search_query)
+            | Q(original_uploader__icontains=search_query)
+            | Q(other_creators__icontains=search_query)
+            | Q(mod_category__icontains=search_query)
+            | Q(level_code__icontains=search_query)
+            | Q(url__icontains=search_query)
+            | Q(video_url__icontains=search_query)
+            | Q(creator__username__icontains=search_query)
+            | Q(creator__profile__display_name__icontains=search_query)
+        ).distinct()
+
     # Sorting functionality
     sort_by = request.GET.get('sort', 'quality_rating')
     sort_direction = request.GET.get('direction', 'desc')
@@ -330,6 +345,7 @@ def level_list(request):
         'page_obj': page_obj,
         'sort_by': sort_by,
         'sort_direction': sort_direction,
+        'search_query': search_query,
         'difficulty_system': difficulty_system,
     })
 
@@ -487,12 +503,17 @@ def submit_level_completion(request, level_id):
 
 @login_required
 def my_completion_submissions(request):
-    submissions = LevelCompletion.objects.filter(user=request.user).order_by('-submitted_at')
+    submissions_qs = LevelCompletion.objects.filter(user=request.user).order_by('-submitted_at')
+    paginator = Paginator(submissions_qs, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     return render(
         request,
         'levels/my_completion_submissions.html',
         {
-            'submissions': submissions,
+            'submissions': page_obj,
+            'page_obj': page_obj,
         },
     )
 
@@ -514,12 +535,17 @@ def admin_completion_triage(request):
 
         return redirect('levels:admin_completion_triage')
 
-    submissions = LevelCompletion.objects.select_related('user', 'level', 'reviewed_by').order_by('-submitted_at')
+    submissions_qs = LevelCompletion.objects.select_related('user', 'level', 'reviewed_by').order_by('-submitted_at')
+    paginator = Paginator(submissions_qs, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     return render(
         request,
         'levels/admin_completion_triage.html',
         {
-            'submissions': submissions,
+            'submissions': page_obj,
+            'page_obj': page_obj,
         },
     )
 

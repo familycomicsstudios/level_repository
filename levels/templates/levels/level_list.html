@@ -8,14 +8,27 @@
     </div>
 
     <div class="bubble-section">
+        <h5>Search Levels</h5>
+        <form method="get" class="bubble-actions" style="align-items: center;">
+            <input type="text" name="q" value="{{ search_query }}" class="form-control" style="max-width: 420px;" placeholder="Search by name, creator, mod, description, URL, video...">
+            <input type="hidden" name="sort" value="{{ sort_by }}">
+            <input type="hidden" name="direction" value="{{ sort_direction }}">
+            <button type="submit" class="btn btn-primary">Search</button>
+            {% if search_query %}
+            <a href="?sort={{ sort_by }}&direction={{ sort_direction }}" class="btn btn-secondary">Clear</a>
+            {% endif %}
+        </form>
+    </div>
+
+    <div class="bubble-section">
         <h5>Sort Levels</h5>
         <div class="bubble-actions">
-            <a href="?sort=difficulty&direction={% if sort_by == 'difficulty' and sort_direction == 'desc' %}asc{% else %}desc{% endif %}" class="btn btn-primary">Difficulty Rating</a>
-            <a href="?sort=quality_rating&direction={% if sort_by == 'quality_rating' and sort_direction == 'desc' %}asc{% else %}desc{% endif %}" class="btn btn-primary">Quality Rating</a>
-            <a href="?sort=created_at&direction={% if sort_by == 'created_at' and sort_direction == 'desc' %}asc{% else %}desc{% endif %}" class="btn btn-primary">Date Added</a>
-            <a href="?sort=name&direction={% if sort_by == 'name' and sort_direction == 'asc' %}desc{% else %}asc{% endif %}" class="btn btn-primary">Name</a>
-            <a href="?sort=mod_category&direction={% if sort_by == 'mod_category' and sort_direction == 'asc' %}desc{% else %}asc{% endif %}" class="btn btn-primary">Mod</a>
-            <a href="?sort=creator&direction={% if sort_by == 'creator' and sort_direction == 'asc' %}desc{% else %}asc{% endif %}" class="btn btn-primary">Creator</a>
+            <a href="?q={{ search_query|urlencode }}&sort=difficulty&direction={% if sort_by == 'difficulty' and sort_direction == 'desc' %}asc{% else %}desc{% endif %}" class="btn btn-primary">Difficulty Rating</a>
+            <a href="?q={{ search_query|urlencode }}&sort=quality_rating&direction={% if sort_by == 'quality_rating' and sort_direction == 'desc' %}asc{% else %}desc{% endif %}" class="btn btn-primary">Quality Rating</a>
+            <a href="?q={{ search_query|urlencode }}&sort=created_at&direction={% if sort_by == 'created_at' and sort_direction == 'desc' %}asc{% else %}desc{% endif %}" class="btn btn-primary">Date Added</a>
+            <a href="?q={{ search_query|urlencode }}&sort=name&direction={% if sort_by == 'name' and sort_direction == 'asc' %}desc{% else %}asc{% endif %}" class="btn btn-primary">Name</a>
+            <a href="?q={{ search_query|urlencode }}&sort=mod_category&direction={% if sort_by == 'mod_category' and sort_direction == 'asc' %}desc{% else %}asc{% endif %}" class="btn btn-primary">Mod</a>
+            <a href="?q={{ search_query|urlencode }}&sort=creator&direction={% if sort_by == 'creator' and sort_direction == 'asc' %}desc{% else %}asc{% endif %}" class="btn btn-primary">Creator</a>
         </div>
     </div>
 
@@ -61,12 +74,12 @@
             <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
             <div>
                 {% if page_obj.has_previous %}
-                    <a href="?page=1&sort={{ sort_by }}&direction={{ sort_direction }}" class="btn btn-secondary">First</a>
-                    <a href="?page={{ page_obj.previous_page_number }}&sort={{ sort_by }}&direction={{ sort_direction }}" class="btn btn-secondary">Previous</a>
+                    <a href="?q={{ search_query|urlencode }}&page=1&sort={{ sort_by }}&direction={{ sort_direction }}" class="btn btn-secondary">First</a>
+                    <a href="?q={{ search_query|urlencode }}&page={{ page_obj.previous_page_number }}&sort={{ sort_by }}&direction={{ sort_direction }}" class="btn btn-secondary">Previous</a>
                 {% endif %}
                 {% if page_obj.has_next %}
-                    <a href="?page={{ page_obj.next_page_number }}&sort={{ sort_by }}&direction={{ sort_direction }}" class="btn btn-secondary">Next</a>
-                    <a href="?page={{ page_obj.paginator.num_pages }}&sort={{ sort_by }}&direction={{ sort_direction }}" class="btn btn-secondary">Last</a>
+                    <a href="?q={{ search_query|urlencode }}&page={{ page_obj.next_page_number }}&sort={{ sort_by }}&direction={{ sort_direction }}" class="btn btn-secondary">Next</a>
+                    <a href="?q={{ search_query|urlencode }}&page={{ page_obj.paginator.num_pages }}&sort={{ sort_by }}&direction={{ sort_direction }}" class="btn btn-secondary">Last</a>
                 {% endif %}
             </div>
         </div>
