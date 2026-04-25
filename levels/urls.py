@@ -5,6 +5,10 @@ app_name = 'levels'
 
 urlpatterns = [
     path('', views.home, name='home'),  # Home page
+    path('api/docs/', views.api_docs, name='api_docs'),
+    path('api/levels/', views.api_levels, name='api_levels'),
+    path('api/levels/<int:level_id>/', views.api_level_detail, name='api_level_detail'),
+    path('api/profiles/<str:username>/', views.api_profile_detail, name='api_profile_detail'),
     path('upload/', views.upload_level, name='upload'),
     path('list/', views.level_list, name='list'),
     path('signup/', views.signup, name='signup'),

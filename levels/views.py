@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from .models import Level, Comment, LevelRating, LevelCompletion
 from django.contrib.auth.models import User
+from django.urls import reverse
 from .forms import (
     LevelForm,
     ProfileSettingsForm,
@@ -15,9 +16,163 @@ from django.contrib.auth.views import LoginView
 import django.contrib.auth
 from django.shortcuts import get_object_or_404
 from django.core.paginator import Paginator
+from django.core.cache import cache
 from django.db.models import Q
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, JsonResponse
+import time
 from .profanity import find_profanity
+
+
+API_RATE_LIMIT_WINDOW_SECONDS = 60
+API_RATE_LIMIT_MAX_CALLS = 60
+
+
+def _client_ip(request):
+    forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if forwarded_for:
+        return forwarded_for.split(',')[0].strip()
+    return request.META.get('REMOTE_ADDR', 'unknown')
+
+
+def _allow_api_request(request, scope='global'):
+    ip = _client_ip(request)
+    now = time.time()
+    window = int(now // API_RATE_LIMIT_WINDOW_SECONDS)
+    key = f"api:rate:{scope}:{ip}:{window}"
+
+    cache.add(key, 0, timeout=API_RATE_LIMIT_WINDOW_SECONDS + 5)
+    try:
+        count = cache.incr(key)
+    except ValueError:
+        cache.set(key, 1, timeout=API_RATE_LIMIT_WINDOW_SECONDS + 5)
+        count = 1
+
+    if count > API_RATE_LIMIT_MAX_CALLS:
+        retry_after = int(API_RATE_LIMIT_WINDOW_SECONDS - (now % API_RATE_LIMIT_WINDOW_SECONDS))
+        return False, retry_after
+    return True, 0
+
+
+def _serialize_level(request, level):
+    creator_display_name = level.creator.profile.display_name if getattr(level.creator, 'profile', None) and level.creator.profile.display_name else level.creator.username
+    return {
+        'id': level.id,
+        'name': level.name,
+        'creator': {
+            'username': level.creator.username,
+            'display_name': creator_display_name,
+            'profile_url': request.build_absolute_uri(reverse('levels:user_profile', args=[level.creator.username])),
+        },
+        'mod_category': level.mod_category,
+        'mod_category_label': level.get_mod_category_display(),
+        'difficulty': level.difficulty,
+        'difficulty_rating': level.difficulty_rating,
+        'quality_rating': level.quality_rating,
+        'description': level.description,
+        'original_uploader': level.original_uploader,
+        'other_creators': level.other_creators,
+        'url': level.url,
+        'video_url': level.video_url,
+        'created_at': level.created_at.isoformat() if level.created_at else None,
+        'detail_url': request.build_absolute_uri(reverse('levels:level_detail', args=[level.id])),
+    }
+
+
+def _serialize_user_profile(request, user):
+    profile = user.profile
+    uploaded_levels = Level.objects.filter(creator=user).order_by('-created_at')
+    approved_completions = LevelCompletion.objects.filter(
+        user=user,
+        status=LevelCompletion.STATUS_APPROVED,
+    ).select_related('level').order_by('-submitted_at')
+
+    return {
+        'username': user.username,
+        'display_name': profile.display_name,
+        'bio': profile.bio,
+        'scratch_username': profile.scratch_username,
+        'date_joined': user.date_joined.isoformat() if user.date_joined else None,
+        'difficulty_system': profile.difficulty_system,
+        'profile_url': request.build_absolute_uri(reverse('levels:user_profile', args=[user.username])),
+        'uploaded_levels_count': uploaded_levels.count(),
+        'approved_completions_count': approved_completions.count(),
+        'uploaded_levels': [
+            {
+                'id': level.id,
+                'name': level.name,
+                'detail_url': request.build_absolute_uri(reverse('levels:level_detail', args=[level.id])),
+                'difficulty_rating': level.difficulty_rating,
+                'quality_rating': level.quality_rating,
+            }
+            for level in uploaded_levels
+        ],
+        'approved_completions': [
+            {
+                'level_id': submission.level.id,
+                'level_name': submission.level.name,
+                'level_url': request.build_absolute_uri(reverse('levels:level_detail', args=[submission.level.id])),
+                'submitted_at': submission.submitted_at.isoformat() if submission.submitted_at else None,
+            }
+            for submission in approved_completions
+        ],
+    }
+
+
+def api_docs(request):
+    return render(request, 'levels/api_docs.html')
+
+
+def api_levels(request):
+    allowed, retry_after = _allow_api_request(request, scope='levels')
+    if not allowed:
+        return JsonResponse(
+            {
+                'error': 'rate_limited',
+                'detail': 'Too many API requests from this IP address.',
+                'retry_after_seconds': retry_after,
+            },
+            status=429,
+        )
+
+    levels = Level.objects.select_related('creator', 'creator__profile').order_by('-created_at')
+    return JsonResponse(
+        {
+            'count': levels.count(),
+            'results': [_serialize_level(request, level) for level in levels],
+        }
+    )
+
+
+def api_level_detail(request, level_id):
+    allowed, retry_after = _allow_api_request(request, scope='levels')
+    if not allowed:
+        return JsonResponse(
+            {
+                'error': 'rate_limited',
+                'detail': 'Too many API requests from this IP address.',
+                'retry_after_seconds': retry_after,
+            },
+            status=429,
+        )
+
+    level = get_object_or_404(Level.objects.select_related('creator', 'creator__profile'), id=level_id)
+    return JsonResponse(_serialize_level(request, level))
+
+
+def api_profile_detail(request, username):
+    allowed, retry_after = _allow_api_request(request, scope='profiles')
+    if not allowed:
+        return JsonResponse(
+            {
+                'error': 'rate_limited',
+                'detail': 'Too many API requests from this IP address.',
+                'retry_after_seconds': retry_after,
+            },
+            status=429,
+        )
+
+    user = get_object_or_404(User.objects.select_related('profile'), username__iexact=username)
+    return JsonResponse(_serialize_user_profile(request, user))
 
 
 def error_404(request, exception):

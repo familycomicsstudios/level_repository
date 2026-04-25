@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}API Docs{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="bubble-section">
+        <h1>Appel Workshop API</h1>
+        <p class="mb-0">Read-only JSON API for levels.</p>
+    </div>
+
+    <div class="bubble-section">
+        <h3>Rate Limiting</h3>
+        <p class="mb-0">Requests are limited per IP address: <strong>60 requests per 60 seconds</strong>. Exceeding the limit returns HTTP <code>429</code> with a <code>retry_after_seconds</code> value.</p>
+    </div>
+
+    <div class="bubble-section">
+        <h3>Endpoints</h3>
+        <ul class="mb-0">
+            <li><code>GET /api/levels/</code> - Returns all levels (newest first).</li>
+            <li><code>GET /api/levels/&lt;id&gt;/</code> - Returns one level by id.</li>
+            <li><code>GET /api/profiles/&lt;username&gt;/</code> - Returns one user profile by username (case-insensitive).</li>
+        </ul>
+    </div>
+
+    <div class="bubble-section">
+        <h3>Level Object Fields</h3>
+        <ul class="mb-0">
+            <li><code>id</code>, <code>name</code>, <code>mod_category</code>, <code>mod_category_label</code></li>
+            <li><code>difficulty</code>, <code>difficulty_rating</code>, <code>quality_rating</code></li>
+            <li><code>description</code>, <code>original_uploader</code>, <code>other_creators</code></li>
+            <li><code>url</code>, <code>video_url</code>, <code>created_at</code>, <code>detail_url</code></li>
+            <li><code>creator</code> object with <code>username</code>, <code>display_name</code>, <code>profile_url</code></li>
+        </ul>
+    </div>
+
+    <div class="bubble-section">
+        <h3>Profile Object Fields</h3>
+        <ul class="mb-0">
+            <li><code>username</code>, <code>display_name</code>, <code>bio</code>, <code>scratch_username</code></li>
+            <li><code>date_joined</code>, <code>difficulty_system</code>, <code>profile_url</code></li>
+            <li><code>uploaded_levels_count</code>, <code>approved_completions_count</code></li>
+            <li><code>uploaded_levels</code> list and <code>approved_completions</code> list</li>
+        </ul>
+    </div>
+
+    <div class="bubble-section">
+        <h3>Example</h3>
+        <pre class="mb-0" style="white-space: pre-wrap;">{
+  "id": 123,
+  "name": "My Level",
+  "creator": {
+    "username": "someuser",
+    "display_name": "Some User",
+    "profile_url": "https://example.com/profile/someuser/"
+  },
+  "mod_category": "appel",
+  "mod_category_label": "Appel",
+  "difficulty": 4.5,
+  "difficulty_rating": 4.75,
+  "quality_rating": 4.4,
+  "description": "...",
+  "original_uploader": "",
+  "other_creators": "friend1, Friend Two",
+  "url": "https://example.com",
+  "video_url": "https://www.youtube.com/embed/VIDEO_ID",
+  "created_at": "2026-04-25T14:35:12.123456+00:00",
+  "detail_url": "https://example.com/level/123/"
+}</pre>
+    </div>
+</div>
+{% endblock %}

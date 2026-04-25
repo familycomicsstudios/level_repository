@@ -15,5 +15,6 @@
     {% if user.is_authenticated and user.is_staff %}
         <a class="btn btn-danger btn-lg" href="{% url 'levels:admin_completion_triage' %}" role="button">Completion Triage</a>
     {% endif %}
+    <a class="btn btn-outline-secondary btn-lg" href="{% url 'levels:api_docs' %}" role="button">API Docs</a>
 </div>
 {% endblock %}

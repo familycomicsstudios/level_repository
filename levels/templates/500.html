@@ -1,129 +1,17 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>500 | Appel Workshop</title>
-    <link rel="icon" href="{% static 'icon.png' %}" type="image/png">
-    <style>
-        :root {
-            --night-1: #0f172a;
-            --night-2: #1f2937;
-            --glow: #7dd3fc;
-            --accent: #fbbf24;
-            --text: #eff6ff;
-            --card: rgba(17, 24, 39, 0.82);
-        }
+{% extends "base.html" %}
 
-        * {
-            box-sizing: border-box;
-        }
+{% block title %}500 | Appel Workshop{% endblock %}
 
-        body {
-            margin: 0;
-            min-height: 100vh;
-            font-family: "Trebuchet MS", "Segoe UI", sans-serif;
-            color: var(--text);
-            background:
-                radial-gradient(circle at 24% 12%, rgba(125, 211, 252, 0.18), transparent 30%),
-                radial-gradient(circle at 78% 20%, rgba(251, 191, 36, 0.14), transparent 27%),
-                linear-gradient(165deg, var(--night-1), var(--night-2));
-            display: grid;
-            place-items: center;
-            padding: 24px;
-        }
-
-        .card {
-            width: min(760px, 100%);
-            border-radius: 24px;
-            padding: 34px 30px;
-            background: var(--card);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            box-shadow: 0 20px 48px rgba(0, 0, 0, 0.38);
-            text-align: center;
-            animation: fade-up .45s ease-out;
-        }
-
-        .code {
-            margin: 0;
-            font-size: clamp(56px, 14vw, 120px);
-            letter-spacing: 0.05em;
-            line-height: 0.9;
-            color: var(--glow);
-            text-shadow: 0 0 22px rgba(125, 211, 252, 0.35);
-        }
-
-        h1 {
-            margin: 10px 0 8px;
-            font-size: clamp(24px, 4vw, 36px);
-        }
-
-        p {
-            margin: 0 auto;
-            max-width: 560px;
-            font-size: 18px;
-            line-height: 1.45;
-            opacity: 0.95;
-        }
-
-        .actions {
-            margin-top: 24px;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 12px;
-        }
-
-        .btn {
-            text-decoration: none;
-            border-radius: 999px;
-            padding: 11px 18px;
-            font-weight: 700;
-            border: 2px solid transparent;
-            transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
-        }
-
-        .btn-primary {
-            background: var(--accent);
-            color: #111827;
-            box-shadow: 0 8px 18px rgba(251, 191, 36, 0.35);
-        }
-
-        .btn-secondary {
-            background: transparent;
-            color: #e5e7eb;
-            border-color: rgba(229, 231, 235, 0.32);
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-        }
-
-        @keyframes fade-up {
-            from {
-                opacity: 0;
-                transform: translateY(10px) scale(0.99);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-    </style>
-</head>
-<body>
-    <main class="card">
-        <p class="code">500</p>
-        <h1>The workshop hit a snag</h1>
-        <p>
-            Something went wrong on our side while loading this page.
-            Please try again in a moment.
-        </p>
-        <div class="actions">
+{% block content %}
+<div class="container">
+    <div class="bubble-section text-center">
+        <h1 class="display-4 mb-3">500</h1>
+        <h2 class="h4 mb-3">The workshop hit a snag</h2>
+        <p class="mb-4">Something went wrong on our side while loading this page. Please try again in a moment.</p>
+        <div class="bubble-actions justify-content-center">
             <a class="btn btn-primary" href="/">Retry Home</a>
             <a class="btn btn-secondary" href="/list/">Open Level List</a>
         </div>
-    </main>
-</body>
-</html>
+    </div>
+</div>
+{% endblock %}
