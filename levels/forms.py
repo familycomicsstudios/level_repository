@@ -1,5 +1,6 @@
 from django import forms
 from decimal import Decimal, ROUND_HALF_UP
+from urllib.parse import urlparse, parse_qs
 from django.contrib.auth import authenticate
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
@@ -33,15 +34,62 @@ class LevelForm(forms.ModelForm):
     def clean_level_code(self):
         return self._validate_clean_text(self.cleaned_data.get("level_code"), "Level code")
 
+    def clean(self):
+        cleaned_data = super().clean()
+        mod_category = cleaned_data.get("mod_category")
+        level_code = (cleaned_data.get("level_code") or "").strip()
+
+        if mod_category != "custom" and not level_code:
+            self.add_error("level_code", "Level code is required unless mod category is Custom.")
+
+        return cleaned_data
+
     def clean_original_uploader(self):
         return self._validate_clean_text(self.cleaned_data.get("original_uploader"), "Original uploader")
 
     def clean_description(self):
         return self._validate_clean_text(self.cleaned_data.get("description"), "Description")
 
+    def clean_other_creators(self):
+        return self._validate_clean_text(self.cleaned_data.get("other_creators"), "Other creators")
+
+    def clean_video_url(self):
+        raw_url = (self.cleaned_data.get("video_url") or "").strip()
+        if not raw_url:
+            return ""
+
+        parsed = urlparse(raw_url)
+        hostname = (parsed.hostname or "").lower()
+        video_id = ""
+
+        if hostname in {"youtube.com", "www.youtube.com", "m.youtube.com"}:
+            if parsed.path == "/watch":
+                video_id = parse_qs(parsed.query).get("v", [""])[0]
+            elif parsed.path.startswith("/embed/"):
+                video_id = parsed.path.split("/embed/", 1)[1].split("/", 1)[0]
+            elif parsed.path.startswith("/shorts/"):
+                video_id = parsed.path.split("/shorts/", 1)[1].split("/", 1)[0]
+        elif hostname in {"youtu.be", "www.youtu.be"}:
+            video_id = parsed.path.lstrip("/").split("/", 1)[0]
+
+        if not video_id:
+            raise forms.ValidationError("Video must be a valid YouTube URL.")
+
+        return f"https://www.youtube.com/embed/{video_id}"
+
     class Meta:
         model = Level
-        fields = ['name', 'level_code', 'mod_category', 'difficulty', 'original_uploader', 'description']
+        fields = [
+            'name',
+            'level_code',
+            'mod_category',
+            'difficulty',
+            'original_uploader',
+            'other_creators',
+            'url',
+            'video_url',
+            'description',
+        ]
 
 
 class LevelRatingForm(forms.ModelForm):

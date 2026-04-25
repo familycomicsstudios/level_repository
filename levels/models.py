@@ -25,13 +25,17 @@ class Level(models.Model):
         ('appelp', 'Appel+'),
         ('appelm', 'Appel Multiplayer'),
         ('sheepel', 'Sheepel'),
-        ('appel-playground', "Appel Playground")
+        ('appel-playground', "Appel Playground"),
+        ('custom', 'Custom'),
     ]
 
     name = models.CharField(max_length=100)
-    level_code = models.TextField(max_length=10000)
+    level_code = models.TextField(max_length=10000, blank=True, default="")
     description = models.TextField(null=True, blank=True, default="", max_length=2000)
     original_uploader = models.CharField(null=True, blank=True, default="", max_length=100, help_text="The original creator of the level. Leave blank if this was you.")
+    other_creators = models.TextField(blank=True, default="", help_text="Optional: comma-separated usernames or names.")
+    url = models.URLField(blank=True, default="")
+    video_url = models.URLField(blank=True, default="", help_text="Optional YouTube link.")
     difficulty = models.FloatField(default=0, help_text="The difficulty (in the Punter scale, more info <a href='https://appel.miraheze.org/wiki/Difficulty'>here</a>)")
     difficulty_rating = models.FloatField(null=True, blank=True)
     quality_rating = models.FloatField(null=True, blank=True)

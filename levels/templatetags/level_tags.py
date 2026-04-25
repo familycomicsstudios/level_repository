@@ -1,8 +1,12 @@
 from django import template
 from django.utils.safestring import mark_safe
+from django.utils.html import conditional_escape, format_html
+from django.urls import reverse
 from levels.models import Level, DIFFICULTY_SYSTEM_CHOICES
 from levels.difficulty import format_difficulty, SYSTEM_LABELS
+from django.contrib.auth.models import User
 import math
+import re
 
 register = template.Library()
 
@@ -62,3 +66,29 @@ def display_name_or_username(user):
         pass
 
     return user.username
+
+
+@register.filter
+def render_other_creators(value):
+    if not value:
+        return ""
+
+    entries = [entry.strip() for entry in re.split(r"[,;\n]+", str(value)) if entry.strip()]
+    rendered = []
+    for entry in entries:
+        user = User.objects.filter(username__iexact=entry).first()
+        if user:
+            rendered.append(
+                format_html('<a href="{}">{}</a>', reverse('levels:user_profile', args=[user.username]), conditional_escape(entry))
+            )
+        else:
+            rendered.append(conditional_escape(entry))
+
+    return mark_safe(', '.join(str(item) for item in rendered))
+
+
+@register.filter
+def is_youtube_embed(value):
+    if not value:
+        return False
+    return str(value).startswith("https://www.youtube.com/embed/")
