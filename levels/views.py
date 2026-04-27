@@ -79,6 +79,13 @@ def _serialize_level(request, level):
     }
 
 
+def _serialize_level_detail(request, level):
+    """Serialize level with full details including level_code for detail endpoint."""
+    data = _serialize_level(request, level)
+    data['level_code'] = level.level_code
+    return data
+
+
 def _serialize_user_profile(request, user):
     profile = user.profile
     uploaded_levels = Level.objects.filter(creator=user).order_by('-created_at')
@@ -157,7 +164,7 @@ def api_level_detail(request, level_id):
         )
 
     level = get_object_or_404(Level.objects.select_related('creator', 'creator__profile'), id=level_id)
-    return JsonResponse(_serialize_level(request, level))
+    return JsonResponse(_serialize_level_detail(request, level))
 
 
 def api_profile_detail(request, username):
