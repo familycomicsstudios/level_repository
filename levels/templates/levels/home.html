@@ -1,5 +1,24 @@
 {% extends "base.html" %}
-{% block title %}Home{% endblock %}
+{% load static %}
+{% block title %}Appel Workshop | Play and Share Appel Levels{% endblock %}
+
+{% block seo_meta %}
+    <meta name="description" content="Appel Workshop is a level sharing website for Appel where you can play, share, and rate levels.">
+    <meta name="author" content="Themadpunter">
+    <meta name="keywords" content="appel, workshop, appel level, appel levels">
+    <meta name="robots" content="index,follow">
+    <link rel="canonical" href="https://workshop.appelgame.net/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Appel Workshop">
+    <meta property="og:title" content="Appel Workshop | Play and Share Appel Levels">
+    <meta property="og:description" content="Appel Workshop is a level sharing website for Appel where you can play, share, and rate levels.">
+    <meta property="og:url" content="https://workshop.appelgame.net/">
+    <meta property="og:image" content="{% static 'icon.png' %}">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Appel Workshop | Play and Share Appel Levels">
+    <meta name="twitter:description" content="Appel Workshop is a level sharing website for Appel where you can play, share, and rate levels.">
+    <meta name="twitter:image" content="{% static 'icon.png' %}">
+{% endblock %}
 
 {% block content %}
 <div class="">
