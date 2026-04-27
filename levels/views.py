@@ -2,11 +2,14 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from .models import Level, Comment, LevelRating, LevelCompletion
 from django.contrib.auth.models import User
+from django.contrib.auth import update_session_auth_hash
 import math
 from django.urls import reverse
 from .forms import (
     LevelForm,
     ProfileSettingsForm,
+    UsernameChangeForm,
+    AccountDeleteForm,
     LevelRatingForm,
     LevelCompletionForm,
     ProfilePublicForm,
@@ -55,15 +58,24 @@ def _allow_api_request(request, scope='global'):
 
 
 def _serialize_level(request, level):
-    creator_display_name = level.creator.profile.display_name if getattr(level.creator, 'profile', None) and level.creator.profile.display_name else level.creator.username
+    creator = level.creator
+    creator_display_name = None
+    creator_username = None
+    creator_profile_url = None
+    if creator:
+        creator_username = creator.username
+        creator_display_name = creator.profile.display_name if getattr(creator, 'profile', None) and creator.profile.display_name else creator.username
+        creator_profile_url = request.build_absolute_uri(reverse('levels:user_profile', args=[creator.username]))
+    else:
+        creator_display_name = 'Deleted user'
     return {
         'id': level.id,
         'name': level.name,
         'creator': {
-            'username': level.creator.username,
+            'username': creator_username,
             'display_name': creator_display_name,
-            'profile_url': request.build_absolute_uri(reverse('levels:user_profile', args=[level.creator.username])),
-        },
+            'profile_url': creator_profile_url,
+        } if creator_display_name is not None else None,
         'mod_category': level.mod_category,
         'mod_category_label': level.get_mod_category_display(),
         'difficulty': level.difficulty,
@@ -352,7 +364,6 @@ def upload_level(request):
 def level_list(request):
     from django.db.models import Case, When, Value, CharField
     from django.db.models.functions import Coalesce
-    
     levels = Level.objects.all()
 
     search_query = request.GET.get('q', '').strip()
@@ -375,12 +386,13 @@ def level_list(request):
     sort_direction = request.GET.get('direction', 'desc')
 
     if sort_by == 'creator':
-        # Sort by original_uploader if it exists, otherwise by creator username
+        # Sort by original_uploader if it exists, otherwise by creator username.
+        # Deleted accounts leave creator null, so fall back to an empty string.
         levels = levels.annotate(
             display_creator=Case(
                 When(original_uploader__isnull=False, original_uploader__gt='', then='original_uploader'),
-                default='creator__username',
-                output_field=CharField()
+                default=Coalesce('creator__username', Value('')),
+                output_field=CharField(),
             )
         )
         if sort_direction == 'desc':
@@ -402,9 +414,9 @@ def level_list(request):
             )
         )
         if sort_direction == 'desc':
-            levels = levels.order_by('has_quality', '-quality_rating')
+            levels = levels.order_by('has_quality', '-quality_rating', 'id')
         else:
-            levels = levels.order_by('has_quality', 'quality_rating')
+            levels = levels.order_by('has_quality', 'quality_rating', 'id')
     elif sort_by in ['name', 'mod_category', 'created_at']:
         if sort_direction == 'desc':
             levels = levels.order_by(f'-{sort_by}')  # Descending order
@@ -685,20 +697,108 @@ def info_page(request):
 @login_required
 def user_settings(request):
     profile = request.user.profile
+    profile_form = ProfileSettingsForm(instance=profile, prefix='profile')
+    username_form = UsernameChangeForm(instance=request.user, prefix='account')
+    password_form = None
+    delete_form = AccountDeleteForm(user=request.user, prefix='delete')
+
     if request.method == 'POST':
-        form = ProfileSettingsForm(request.POST, instance=profile)
-        if form.is_valid():
-            form.save()
-            return redirect('levels:user_settings')
-    else:
-        form = ProfileSettingsForm(instance=profile)
+        action = request.POST.get('action')
+
+        if action == 'profile':
+            profile_form = ProfileSettingsForm(request.POST, instance=profile, prefix='profile')
+            if profile_form.is_valid():
+                profile_form.save()
+                return redirect('levels:user_settings')
+        elif action == 'account':
+            username_form = UsernameChangeForm(request.POST, instance=request.user, prefix='account')
+            if username_form.is_valid():
+                username_form.save()
+                return redirect('levels:user_settings')
+        elif action == 'password':
+            from django.contrib.auth.forms import PasswordChangeForm
+
+            password_form = PasswordChangeForm(user=request.user, data=request.POST, prefix='password')
+            if password_form.is_valid():
+                user = password_form.save()
+                update_session_auth_hash(request, user)
+                return redirect('levels:user_settings')
+        elif action == 'delete':
+            delete_form = AccountDeleteForm(request.POST, user=request.user, prefix='delete')
+            if delete_form.is_valid():
+                Level.objects.filter(creator=request.user).update(creator=None)
+                request.user.delete()
+                return redirect('levels:home')
+
+    if password_form is None:
+        from django.contrib.auth.forms import PasswordChangeForm
+
+        password_form = PasswordChangeForm(user=request.user, prefix='password')
 
     return render(
         request,
         'levels/user_settings.html',
         {
-            'form': form,
+            'profile_form': profile_form,
+            'username_form': username_form,
+            'password_form': password_form,
+            'delete_form': delete_form,
             'difficulty_system': profile.difficulty_system,
+        },
+    )
+
+
+def leaderboards(request):
+    from collections import defaultdict
+
+    approved = LevelCompletion.objects.filter(
+        status=LevelCompletion.STATUS_APPROVED
+    ).select_related('level', 'user', 'user__profile')
+
+    users = {}
+    for comp in approved:
+        u = comp.user
+        if u.id not in users:
+            users[u.id] = {'user': u, 'difficulties': []}
+
+        diff = comp.level.difficulty_rating if comp.level.difficulty_rating is not None else comp.level.difficulty
+        try:
+            diff_val = float(diff)
+        except Exception:
+            diff_val = 0.0
+
+        users[u.id]['difficulties'].append(diff_val)
+
+    entries = []
+    for data in users.values():
+        diffs = sorted(data['difficulties'], reverse=True)
+        list_points = sum((d ** 4) / 10.0 for d in diffs)
+
+        decay = 0.8
+        competitive = 0.0
+        for idx, d in enumerate(diffs):
+            competitive += ((d ** 4) / 10.0) * (decay ** idx)
+
+        total_clears = len(diffs)
+
+        entries.append({
+            'user': data['user'],
+            'list_points': list_points,
+            'competitive': competitive,
+            'total_clears': total_clears,
+        })
+
+    list_board = sorted(entries, key=lambda e: e['list_points'], reverse=True)[:100]
+    competitive_board = sorted(entries, key=lambda e: e['competitive'], reverse=True)[:100]
+    clears_board = sorted(entries, key=lambda e: e['total_clears'], reverse=True)[:100]
+
+    return render(
+        request,
+        'levels/leaderboards.html',
+        {
+            'list_board': list_board,
+            'competitive_board': competitive_board,
+            'clears_board': clears_board,
         },
     )
 

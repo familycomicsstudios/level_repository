@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="bubble-section leaderboard-shell">
+    <h1 class="bubble-title">Leaderboards</h1>
+
+    <ul class="nav nav-tabs leaderboard-tabs" id="leaderboardTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <a class="nav-link active" id="list-points-tab" data-toggle="tab" href="#list-points" role="tab" aria-controls="list-points" aria-selected="true">
+          List Points
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link" id="competitive-tab" data-toggle="tab" href="#competitive" role="tab" aria-controls="competitive" aria-selected="false">
+          Competitive
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link" id="clears-tab" data-toggle="tab" href="#clears" role="tab" aria-controls="clears" aria-selected="false">
+          Total Clears
+        </a>
+      </li>
+    </ul>
+
+    <div class="tab-content leaderboard-tab-content" id="leaderboardTabsContent">
+      <div class="tab-pane fade show active" id="list-points" role="tabpanel" aria-labelledby="list-points-tab">
+        <div class="bubble-table">
+          <table class="table leaderboard-table">
+            <thead>
+              <tr><th>#</th><th>User</th><th>Points</th><th>Clears</th></tr>
+            </thead>
+            <tbody>
+              {% for entry in list_board %}
+                <tr>
+                  <td>{{ forloop.counter }}</td>
+                  <td>
+                    <a href="{% url 'levels:user_profile' entry.user.username %}">
+                      {% if entry.user.profile.display_name %}{{ entry.user.profile.display_name }}{% else %}{{ entry.user.username }}{% endif %}
+                    </a>
+                  </td>
+                  <td>{{ entry.list_points|floatformat:2 }}</td>
+                  <td>{{ entry.total_clears }}</td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="4">No entries yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="competitive" role="tabpanel" aria-labelledby="competitive-tab">
+        <div class="bubble-table">
+          <table class="table leaderboard-table">
+            <thead>
+              <tr><th>#</th><th>User</th><th>Competitive Points</th><th>Clears</th></tr>
+            </thead>
+            <tbody>
+              {% for entry in competitive_board %}
+                <tr>
+                  <td>{{ forloop.counter }}</td>
+                  <td>
+                    <a href="{% url 'levels:user_profile' entry.user.username %}">
+                      {% if entry.user.profile.display_name %}{{ entry.user.profile.display_name }}{% else %}{{ entry.user.username }}{% endif %}
+                    </a>
+                  </td>
+                  <td>{{ entry.competitive|floatformat:2 }}</td>
+                  <td>{{ entry.total_clears }}</td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="4">No entries yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="clears" role="tabpanel" aria-labelledby="clears-tab">
+        <div class="bubble-table">
+          <table class="table leaderboard-table">
+            <thead>
+              <tr><th>#</th><th>User</th><th>Clears</th></tr>
+            </thead>
+            <tbody>
+              {% for entry in clears_board %}
+                <tr>
+                  <td>{{ forloop.counter }}</td>
+                  <td>
+                    <a href="{% url 'levels:user_profile' entry.user.username %}">
+                      {% if entry.user.profile.display_name %}{{ entry.user.profile.display_name }}{% else %}{{ entry.user.username }}{% endif %}
+                    </a>
+                  </td>
+                  <td>{{ entry.total_clears }}</td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="3">No entries yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% endblock %}

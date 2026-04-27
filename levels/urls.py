@@ -27,5 +27,6 @@ urlpatterns = [
     path('comment/<int:comment_id>/delete/', views.delete_comment, name='delete_comment'),
     path('info/', views.info_page, name='info_page'),
     path('settings/', views.user_settings, name='user_settings'),
+    path('leaderboards/', views.leaderboards, name='leaderboards'),
 
 ]

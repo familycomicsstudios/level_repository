@@ -243,3 +243,68 @@ class LevelRatingTests(TestCase):
         self.assertContains(response, 'Total Completions:</strong> 1')
         self.assertContains(response, reverse('levels:level_detail', args=[self.level.id]))
         self.assertContains(response, reverse('levels:user_profile', args=[self.rater.username]))
+
+
+class AccountSettingsTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='settingsuser', password='pass12345')
+
+    def test_user_settings_can_change_username(self):
+        self.client.login(username='settingsuser', password='pass12345')
+
+        response = self.client.post(
+            reverse('levels:user_settings'),
+            {
+                'action': 'account',
+                'account-username': 'renameduser',
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.username, 'renameduser')
+        self.assertTrue(self.client.login(username='renameduser', password='pass12345'))
+
+    def test_user_settings_can_change_password(self):
+        self.client.login(username='settingsuser', password='pass12345')
+
+        response = self.client.post(
+            reverse('levels:user_settings'),
+            {
+                'action': 'password',
+                'password-old_password': 'pass12345',
+                'password-new_password1': 'newpass12345',
+                'password-new_password2': 'newpass12345',
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(self.client.login(username='settingsuser', password='newpass12345'))
+        self.assertFalse(self.client.login(username='settingsuser', password='pass12345'))
+
+    def test_user_settings_can_delete_account_without_deleting_levels(self):
+        level = Level.objects.create(
+            name='Owned Level',
+            level_code='code',
+            difficulty=4,
+            creator=self.user,
+        )
+
+        self.client.login(username='settingsuser', password='pass12345')
+        response = self.client.post(
+            reverse('levels:user_settings'),
+            {
+                'action': 'delete',
+                'delete-confirmation': 'DELETE',
+                'delete-current_password': 'pass12345',
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(User.objects.filter(username='settingsuser').exists())
+        level.refresh_from_db()
+        self.assertIsNone(level.creator)
+
+        detail_response = self.client.get(reverse('levels:level_detail', args=[level.id]))
+        self.assertEqual(detail_response.status_code, 200)
+        self.assertContains(detail_response, 'Deleted user')

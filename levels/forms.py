@@ -2,7 +2,8 @@ from django import forms
 from decimal import Decimal, ROUND_HALF_UP
 from urllib.parse import urlparse, parse_qs
 from django.contrib.auth import authenticate
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, PasswordChangeForm
+from django.contrib.auth.hashers import check_password
 from django.contrib.auth.models import User
 from .models import Level, Profile, LevelRating, LevelCompletion, DIFFICULTY_SYSTEM_CHOICES
 from .profanity import find_profanity
@@ -120,6 +121,60 @@ class ProfileSettingsForm(forms.ModelForm):
     class Meta:
         model = Profile
         fields = ['difficulty_system']
+
+
+class UsernameChangeForm(forms.ModelForm):
+    username = forms.CharField(
+        max_length=150,
+        label='Username',
+        help_text='Your public account name. It must be unique.',
+    )
+
+    class Meta:
+        model = User
+        fields = ['username']
+
+    def clean_username(self):
+        username = (self.cleaned_data.get('username') or '').strip()
+        if User.objects.filter(username__iexact=username).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError('A user with that username already exists.')
+        return username
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.username = self.cleaned_data['username']
+        if commit:
+            user.save(update_fields=['username'])
+        return user
+
+
+class AccountDeleteForm(forms.Form):
+    confirmation = forms.CharField(
+        max_length=20,
+        label='Confirmation',
+        help_text='Type DELETE to confirm account deletion.',
+    )
+    current_password = forms.CharField(
+        label='Current password',
+        widget=forms.PasswordInput,
+        help_text='Enter your current password to confirm this action.',
+    )
+
+    def __init__(self, *args, user=None, **kwargs):
+        self.user = user
+        super().__init__(*args, **kwargs)
+
+    def clean_confirmation(self):
+        confirmation = (self.cleaned_data.get('confirmation') or '').strip()
+        if confirmation != 'DELETE':
+            raise forms.ValidationError('Type DELETE to confirm account deletion.')
+        return confirmation
+
+    def clean_current_password(self):
+        current_password = self.cleaned_data.get('current_password') or ''
+        if not self.user or not check_password(current_password, self.user.password):
+            raise forms.ValidationError('Current password is incorrect.')
+        return current_password
 
 
 class LevelCompletionForm(forms.ModelForm):

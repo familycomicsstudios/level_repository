@@ -15,25 +15,59 @@
 </head>
 <body>
     <!-- Navigation Bar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light site-navbar">
         <a class="navbar-brand" href="{% url 'levels:home' %}">Appel Workshop</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ml-auto">
+            <ul class="navbar-nav ml-auto align-items-lg-center">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="browseDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Browse
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="browseDropdown">
+                        <a class="dropdown-item" href="{% url 'levels:list' %}">Level List</a>
+                        <a class="dropdown-item" href="{% url 'levels:leaderboards' %}">Leaderboards</a>
+                        <a class="dropdown-item" href="{% url 'levels:info_page' %}">Info</a>
+                        <a class="dropdown-item" href="{% url 'levels:api_docs' %}">API Docs</a>
+                    </div>
+                </li>
                 {% if user.is_authenticated %}
-                    <li class="nav-item"><a class="nav-link" href="{% url 'levels:upload' %}">Upload Level</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'levels:my_completion_submissions' %}">My Submissions</a></li>
-                    {% if user.is_staff %}
-                    <li class="nav-item"><a class="nav-link" href="{% url 'levels:admin_completion_triage' %}">Completion Triage</a></li>
-                    {% endif %}
-                    <li class="nav-item"><a class="nav-link" href="{% url 'levels:user_profile' user.username %}">My Profile</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'levels:user_settings' %}">Settings</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'levels:logout' %}">Logout</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="activityDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Activity
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="activityDropdown">
+                            <a class="dropdown-item" href="{% url 'levels:upload' %}">Upload Level</a>
+                            <a class="dropdown-item" href="{% url 'levels:my_completion_submissions' %}">My Submissions</a>
+                            {% if user.is_staff %}
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="{% url 'levels:admin_completion_triage' %}">Completion Triage</a>
+                            {% endif %}
+                        </div>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="accountDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Account
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="accountDropdown">
+                            <a class="dropdown-item" href="{% url 'levels:user_profile' user.username %}">My Profile</a>
+                            <a class="dropdown-item" href="{% url 'levels:user_settings' %}">Settings</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="{% url 'levels:logout' %}">Logout</a>
+                        </div>
+                    </li>
                 {% else %}
-                    <li class="nav-item"><a class="nav-link" href="{% url 'levels:login' %}">Login</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'levels:signup' %}">Sign Up</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="accountDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Account
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="accountDropdown">
+                            <a class="dropdown-item" href="{% url 'levels:login' %}">Login</a>
+                            <a class="dropdown-item" href="{% url 'levels:signup' %}">Sign Up</a>
+                        </div>
+                    </li>
                 {% endif %}
             </ul>
         </div>
@@ -45,7 +79,6 @@
 
     <!-- Bootstrap JavaScript and dependencies -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.4.4/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

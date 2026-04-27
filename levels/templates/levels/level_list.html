@@ -51,8 +51,10 @@
                             <td>
                                 {% if level.original_uploader %}
                                     {{ level.original_uploader }}
-                                {% else %}
+                                {% elif level.creator %}
                                     <a href="{% url 'levels:user_profile' level.creator.username %}">{{ level.creator|display_name_or_username }}</a>
+                                {% else %}
+                                    Deleted user
                                 {% endif %}
                             </td>
                             <td>{% if level.difficulty_rating is not None %}{{ level.difficulty_rating|display_difficulty:display_system }}{% else %}Not rated{% endif %}</td>

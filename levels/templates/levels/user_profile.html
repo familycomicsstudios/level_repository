@@ -29,6 +29,7 @@
 				<strong>Username: </strong> {{ user_profile.username }}<br>
 				<strong>Date Joined:</strong> {{ user_profile.date_joined }}<br>
 				<strong>Total Completions:</strong> {{ total_completions }}<br>
+				<strong>Profile Link:</strong> <a href="{% url 'levels:user_profile' user_profile.username %}">{% url 'levels:user_profile' user_profile.username %}</a><br>
 				{% if profile.scratch_username %}
 				<strong>Scratch:</strong> <a href="https://scratch.mit.edu/users/{{ profile.scratch_username|urlencode }}/" target="_blank" rel="noopener noreferrer">@{{ profile.scratch_username }}</a><br>
 				{% endif %}

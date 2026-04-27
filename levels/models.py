@@ -55,11 +55,12 @@ class Level(models.Model):
     level_ratings = models.JSONField(default=list, blank=True)
     mod_category = models.CharField(max_length=50, choices=MOD_CHOICES, default='appel')
 
-    creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name="levels")
+    creator = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="levels")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.name} - {self.creator.username}"
+        creator_name = self.creator.username if self.creator else 'Deleted user'
+        return f"{self.name} - {creator_name}"
 
     def refresh_rating_averages(self):
         difficulty_values = [
