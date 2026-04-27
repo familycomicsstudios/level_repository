@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from .models import Level, Comment, LevelRating, LevelCompletion
 from django.contrib.auth.models import User
+import math
 from django.urls import reverse
 from .forms import (
     LevelForm,
@@ -243,6 +244,76 @@ def level_detail(request, level_id):
             'ratings_count': level.ratings.count(),
             'comment_error': comment_error,
             'comment_content': comment_content,
+        },
+    )
+
+
+def _round_half_up(value):
+    return int(math.floor(float(value) + 0.5))
+
+
+def _build_distribution(values, labels, rounding=None, min_key=None, max_key=None):
+    counts = {}
+    for raw_value in values:
+        if raw_value is None:
+            continue
+
+        key = rounding(raw_value) if rounding else int(raw_value)
+        if min_key is not None:
+            key = max(min_key, key)
+        if max_key is not None:
+            key = min(max_key, key)
+
+        counts[key] = counts.get(key, 0) + 1
+
+    max_count = max(counts.values(), default=0)
+
+    distribution = []
+    for key, label in labels:
+        count = counts.get(key, 0)
+        percent = int((count / max_count) * 100) if max_count else 0
+        distribution.append({
+            'label': label,
+            'count': count,
+            'percent': percent,
+        })
+
+    return distribution
+
+
+def level_reviews(request, level_id):
+    level = get_object_or_404(Level, id=level_id)
+    difficulty_system = request.user.profile.difficulty_system if request.user.is_authenticated else 'punter'
+
+    reviews = list(
+        level.ratings.select_related('user', 'user__profile').order_by('-updated_at', '-created_at')
+    )
+
+    difficulty_distribution = _build_distribution(
+        values=[review.difficulty_rating for review in reviews],
+        labels=[(value, str(value)) for value in range(0, 16)],
+        rounding=_round_half_up,
+        min_key=0,
+        max_key=15,
+    )
+
+    quality_distribution = _build_distribution(
+        values=[review.quality_rating for review in reviews],
+        labels=[(value, str(value)) for value in range(0, 6)],
+        rounding=int,
+        min_key=0,
+        max_key=5,
+    )
+
+    return render(
+        request,
+        'levels/level_reviews.html',
+        {
+            'level': level,
+            'reviews': reviews,
+            'difficulty_distribution': difficulty_distribution,
+            'quality_distribution': quality_distribution,
+            'difficulty_system': difficulty_system,
         },
     )
 

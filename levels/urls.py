@@ -15,6 +15,7 @@ urlpatterns = [
     path('login/', views.CustomLoginView.as_view(), name='login'),  # Custom login URL
     path('logout/', views.logout, name='logout'),  # Custom logout URL
     path('level/<int:level_id>/', views.level_detail, name='level_detail'),  # Level detail URL
+    path('level/<int:level_id>/reviews/', views.level_reviews, name='level_reviews'),
     path('level/<int:level_id>/submit-completion/', views.submit_level_completion, name='submit_level_completion'),
     path('completions/my-submissions/', views.my_completion_submissions, name='my_completion_submissions'),
     path('completions/admin-triage/', views.admin_completion_triage, name='admin_completion_triage'),

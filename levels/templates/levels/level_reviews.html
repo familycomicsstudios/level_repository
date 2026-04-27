@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% load level_tags %}
+
+{% block title %}{{ level.name }} Reviews{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="bubble-section">
+        <h2 class="mb-2">All Reviews for {{ level.name }}</h2>
+        <div class="bubble-actions mb-2">
+            <a href="{% url 'levels:level_detail' level.id %}" class="btn btn-secondary">Back to Level</a>
+            <a href="{% url 'levels:list' %}" class="btn btn-outline-secondary">Back to Levels</a>
+        </div>
+        <p class="mb-0 text-muted">Showing {{ reviews|length }} review{{ reviews|length|pluralize }}.</p>
+    </div>
+
+    <div class="bubble-section">
+        <h4 class="mb-3">Rating Distribution</h4>
+
+        <div class="distribution-wrapper mb-4">
+            <h6 class="mb-2">Difficulty Distribution (rounded to nearest integer)</h6>
+            {% for item in difficulty_distribution %}
+            <div class="distribution-row">
+                <div class="distribution-label">{{ item.label }}</div>
+                <div class="distribution-track">
+                    <div class="distribution-fill distribution-fill-difficulty" style="width: {{ item.percent }}%"></div>
+                </div>
+                <div class="distribution-count">{{ item.count }}</div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="distribution-wrapper">
+            <h6 class="mb-2">Quality Distribution (0-5)</h6>
+            {% for item in quality_distribution %}
+            <div class="distribution-row">
+                <div class="distribution-label">{{ item.label }}</div>
+                <div class="distribution-track">
+                    <div class="distribution-fill distribution-fill-quality" style="width: {{ item.percent }}%"></div>
+                </div>
+                <div class="distribution-count">{{ item.count }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="bubble-section">
+        <h4 class="mb-3">User Reviews</h4>
+        {% if reviews %}
+        <div class="table-responsive">
+            <table class="table table-striped table-sm">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Difficulty</th>
+                        <th>Quality</th>
+                        <th>Updated</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for review in reviews %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'levels:user_profile' review.user.username %}">{{ review.user|display_name_or_username }}</a>
+                        </td>
+                        <td>{{ review.difficulty_rating|display_difficulty:difficulty_system }}</td>
+                        <td>
+                            {% if review.quality_rating is not None %}
+                                {{ review.quality_rating }}/5 ({{ review.quality_rating|as_stars }})
+                            {% else %}
+                                Not rated
+                            {% endif %}
+                        </td>
+                        <td>{{ review.updated_at|date:"Y-m-d H:i" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="mb-0">No reviews yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

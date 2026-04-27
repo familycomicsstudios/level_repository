@@ -88,6 +88,7 @@
                 {{ ratings_count }}
             </div>
         </div>
+        <a href="{% url 'levels:level_reviews' level.id %}" class="btn btn-outline-primary mt-3">View All Reviews</a>
         <p class="text-muted mt-3 mb-0">Shown using the {{ display_system|difficulty_system_label }} scale.</p>
     </div>
     {% endwith %}
