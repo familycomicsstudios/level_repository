@@ -16,6 +16,23 @@ DIFFICULTY_SYSTEM_CHOICES = [
 ]
 
 
+def _load_country_choices():
+    """Load country choices from countries.json file."""
+    try:
+        json_path = os.path.join(os.path.dirname(__file__), '../static/img/country-flags/countries.json')
+        with open(json_path, 'r', encoding='utf-8') as f:
+            countries = json.load(f)
+        # Convert to list of tuples sorted by country name
+        choices = [(code, name) for code, name in countries.items()]
+        choices.sort(key=lambda x: x[1])  # Sort by country name
+        return [('', '-- Select a country --')] + choices
+    except Exception:
+        return [('', '-- Select a country --')]
+
+
+COUNTRY_CHOICES = _load_country_choices()
+
+
 def _median_value(values):
     if not values:
         return None
@@ -222,6 +239,7 @@ class Profile(models.Model):
     scratch_username = models.CharField(max_length=100, blank=True, default='')
     bio = models.TextField(max_length=2000, blank=True, default='')
     discord_user_id = models.CharField(max_length=100, blank=True, default='', help_text="Your Discord user ID for completion pings.")
+    country = models.CharField(max_length=2, blank=True, default='', help_text="Your country for your profile flag.")
     difficulty_system = models.CharField(
         max_length=20,
         choices=DIFFICULTY_SYSTEM_CHOICES,

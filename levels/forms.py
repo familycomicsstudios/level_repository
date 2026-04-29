@@ -5,7 +5,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, PasswordChangeForm
 from django.contrib.auth.hashers import check_password
 from django.contrib.auth.models import User
-from .models import Level, Profile, LevelRating, LevelCompletion, DIFFICULTY_SYSTEM_CHOICES
+from .models import Level, Profile, LevelRating, LevelCompletion, DIFFICULTY_SYSTEM_CHOICES, COUNTRY_CHOICES
 from .profanity import find_profanity
 
 class LevelForm(forms.ModelForm):
@@ -200,7 +200,7 @@ class LevelCompletionForm(forms.ModelForm):
 class ProfilePublicForm(forms.ModelForm):
     class Meta:
         model = Profile
-        fields = ['display_name', 'scratch_username', 'discord_user_id', 'bio']
+        fields = ['display_name', 'scratch_username', 'country', 'discord_user_id', 'bio']
 
     display_name = forms.CharField(
         required=False,
@@ -213,6 +213,12 @@ class ProfilePublicForm(forms.ModelForm):
         max_length=100,
         label='Scratch username',
         help_text='Used to load your Scratch profile picture.',
+    )
+    country = forms.ChoiceField(
+        required=False,
+        choices=COUNTRY_CHOICES,
+        label='Country',
+        help_text='Optional. Select your country to display a flag on your profile.',
     )
     discord_user_id = forms.CharField(
         required=False,
