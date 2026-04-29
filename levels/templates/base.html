@@ -25,7 +25,14 @@
 <body>
     <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light site-navbar">
-        <a class="navbar-brand" href="{% url 'levels:home' %}">Appel Workshop</a>
+        <a class="navbar-brand d-flex align-items-center" href="{% url 'levels:home' %}">
+            <img
+                src="{% static 'icon.png' %}"
+                alt="Appel Workshop"
+                class="site-brand-icon"
+            >
+            <span>Appel Workshop</span>
+        </a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>

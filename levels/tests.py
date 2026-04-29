@@ -1,3 +1,6 @@
+import json
+from unittest.mock import patch
+
 from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth.models import User
@@ -130,6 +133,29 @@ class LevelRatingTests(TestCase):
         self.rater.profile.refresh_from_db()
         completed_ids = self.rater.profile.stats.get('levels_completed', [])
         self.assertIn(self.level.id, completed_ids)
+
+    @patch('levels.models.urlrequest.urlopen')
+    @patch('levels.models.os.getenv', return_value='https://discord.example/webhook')
+    def test_approved_completion_posts_discord_webhook(self, mock_getenv, mock_urlopen):
+        completion = LevelCompletion.objects.create(
+            user=self.rater,
+            level=self.level,
+            proof='Proof text',
+        )
+
+        completion.approve(reviewer=self.admin_user)
+
+        request = mock_urlopen.call_args.args[0]
+        payload = json.loads(request.data.decode('utf-8'))
+
+        self.assertEqual(request.full_url, 'https://discord.example/webhook')
+        self.assertIn('New level completion:', payload['content'])
+        self.assertIn(f"**{self.rater.username}**", payload['content'])
+        self.assertIn(f"**{self.level.name}**", payload['content'])
+        self.assertIn(str(self.level.difficulty), payload['content'])
+        # allowed_mentions present when difficulty >= 5
+        self.assertIn('allowed_mentions', payload)
+        self.assertIn('1499065510866714644', json.dumps(payload.get('allowed_mentions')))
 
     def test_user_profile_shows_only_directly_uploaded_levels(self):
         Level.objects.create(

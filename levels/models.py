@@ -1,7 +1,12 @@
+import json
+import logging
+import os
+
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
+from urllib import request as urlrequest, error as urlerror
 
 
 DIFFICULTY_SYSTEM_CHOICES = [
@@ -30,6 +35,66 @@ def default_profile_stats():
         "levelpoints": 0,
         "levels_completed": [],
     }
+
+
+logger = logging.getLogger(__name__)
+
+
+def _send_completion_approved_webhook(completion):
+    webhook_url = os.getenv("DISCORD_WEBHOOK_URL") or os.getenv("WEBHOOK_URL")
+    if not webhook_url:
+        return
+
+    role_id = "1499065510866714644"
+    mention_role = float(completion.level.difficulty) >= 5
+
+    creator_name = completion.level.creator.username if completion.level.creator else 'Deleted user'
+
+    ping_prefix = f"<@&{role_id}> " if mention_role else ""
+
+    content_str = (
+        f"{ping_prefix}**{completion.user.username}** has completed the level "
+        f"**{completion.level.name}** by {creator_name} (Difficulty: {completion.level.difficulty})."
+    )
+
+    payload_obj = {"content": content_str}
+    if mention_role:
+        # Explicitly allow the role to be mentioned to avoid permission stripping.
+        payload_obj["allowed_mentions"] = {"roles": [role_id]}
+
+    payload = json.dumps(payload_obj).encode("utf-8")
+    request = urlrequest.Request(
+        webhook_url,
+        data=payload,
+        headers={
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "User-Agent": "AppelWorkshop/1.0 (+https://workshop.appelgame.net)",
+            "Connection": "close",
+        },
+        method="POST",
+    )
+
+    try:
+        with urlrequest.urlopen(request, timeout=5) as resp:
+            return
+    except urlerror.HTTPError as exc:
+        # Read response body for debugging
+        try:
+            body = exc.read().decode('utf-8', errors='replace')
+        except Exception:
+            body = '<unreadable response body>'
+        logger.exception("Completion webhook HTTPError for %s: %s", completion.id, exc)
+        print(
+            f"[completion webhook] HTTPError for {completion.level.name} by {completion.user.username}: {exc.code} {exc.reason} - {body}"
+        )
+        return
+    except Exception as exc:
+        logger.exception("Completion webhook failed for %s", completion.id)
+        print(
+            f"[completion webhook] failed for {completion.level.name} by {completion.user.username}: {exc}"
+        )
+        return
 
 class Level(models.Model):
 
@@ -175,6 +240,7 @@ class LevelCompletion(models.Model):
         self.reviewed_at = timezone.now()
         self.save(update_fields=['status', 'reviewed_by', 'reviewed_at', 'updated_at'])
         self._add_level_to_profile_completion_stats()
+        _send_completion_approved_webhook(self)
 
     def reject(self, reviewer=None):
         self.status = self.STATUS_REJECTED
