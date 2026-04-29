@@ -50,11 +50,21 @@ def _send_completion_approved_webhook(completion):
 
     creator_name = completion.level.creator.username if completion.level.creator else 'Deleted user'
 
+    # Use Discord user ID if available, otherwise use site username
+    user_mention = ""
+    try:
+        if hasattr(completion.user, 'profile') and completion.user.profile.discord_user_id:
+            user_mention = f"<@{completion.user.profile.discord_user_id}>"
+        else:
+            user_mention = f"**{completion.user.username}**"
+    except:
+        user_mention = f"**{completion.user.username}**"
+
     ping_prefix = f"<@&{role_id}> " if mention_role else ""
 
     content_str = (
-        f"{ping_prefix}**{completion.user.username}** has completed the level "
-        f"**{completion.level.name}** by {creator_name} (Difficulty: {completion.level.difficulty})."
+        f"{ping_prefix}{user_mention} has completed the level "
+        f"**{completion.level.name}** by {creator_name} - Difficulty: {completion.level.difficulty}."
     )
 
     payload_obj = {"content": content_str}
@@ -170,6 +180,7 @@ class Profile(models.Model):
     display_name = models.CharField(max_length=100, blank=True, default='')
     scratch_username = models.CharField(max_length=100, blank=True, default='')
     bio = models.TextField(max_length=2000, blank=True, default='')
+    discord_user_id = models.CharField(max_length=100, blank=True, default='', help_text="Your Discord user ID for completion pings.")
     difficulty_system = models.CharField(
         max_length=20,
         choices=DIFFICULTY_SYSTEM_CHOICES,

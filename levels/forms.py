@@ -200,7 +200,7 @@ class LevelCompletionForm(forms.ModelForm):
 class ProfilePublicForm(forms.ModelForm):
     class Meta:
         model = Profile
-        fields = ['display_name', 'scratch_username', 'bio']
+        fields = ['display_name', 'scratch_username', 'discord_user_id', 'bio']
 
     display_name = forms.CharField(
         required=False,
@@ -213,6 +213,12 @@ class ProfilePublicForm(forms.ModelForm):
         max_length=100,
         label='Scratch username',
         help_text='Used to load your Scratch profile picture.',
+    )
+    discord_user_id = forms.CharField(
+        required=False,
+        max_length=100,
+        label='Discord user ID',
+        help_text='Optional. Your Discord user ID to be pinged when you complete levels.',
     )
     bio = forms.CharField(
         required=False,
@@ -241,6 +247,12 @@ class ProfilePublicForm(forms.ModelForm):
         matched_word = find_profanity(value or '')
         if matched_word:
             raise forms.ValidationError('Scratch username contains blocked language.')
+        return value
+
+    def clean_discord_user_id(self):
+        value = self.cleaned_data.get('discord_user_id')
+        if value and not value.isdigit():
+            raise forms.ValidationError('Discord user ID must be numeric.')
         return value
 
 
