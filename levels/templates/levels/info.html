@@ -4,8 +4,9 @@
 {% block title %}Appel Workshop{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h1>Info</h1>
+<div class="row">
+    <div class="col-md-8">
+        <h1>Info</h1>
     <p>
         The Appel Workshop is a website where you can play and share different Appel levels. You can submit Appel levels, as well
         as play those that others made. Levels are entered on the Punter difficulty system by default (more info <a href="https://appel.miraheze.org/wiki/Difficulty">here</a>),
@@ -39,5 +40,13 @@
         <li>Don't post any content that violates copyright.</li>
         <li>Don't use profanity, hate speech, etc. in comments.</li>
     </ul>
+    </div>
+    <div class="col-md-4">
+        {% if user.is_authenticated %}
+            <iframe src="https://discordapp.com/widget?id=1499046723618738248&theme=dark&username={{ user.username }}" width="350" height="500" allowtransparency="true" frameborder="0" sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"></iframe>
+        {% else %}
+            <iframe src="https://discordapp.com/widget?id=1499046723618738248&theme=dark" width="350" height="500" allowtransparency="true" frameborder="0" sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"></iframe>
+        {% endif %}
+    </div>
 </div>
 {% endblock %}
