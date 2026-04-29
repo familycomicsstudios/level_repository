@@ -40,6 +40,44 @@ def default_profile_stats():
 logger = logging.getLogger(__name__)
 
 
+def _get_difficulty_emoji(difficulty):
+    """Get the Discord custom emoji for a difficulty level."""
+    difficulty_float = float(difficulty)
+    
+    # Emoji mapping based on difficulty ranges
+    emojis = {
+        0: "<:auto:1499091032657367090>",           # 0
+        1: "<:effortless:1499090388412141660>",     # 0.1-0.99
+        2: "<:easy:1499090476140199986>",           # 1-1.99
+        3: "<:medium:1499090553717919755>",         # 2-2.99
+        4: "<:hard:1499090771498762280>",           # 3-3.99
+        5: "<:harder:1499090837076705351>",         # 4-4.99
+        6: "<:insane:1499090913492730137>",         # 5-5.99
+        7: "<:expert:1499091006090645696>",         # 6-6.99
+        8: "<:extreme:1499091158574432358>",        # 7-7.99
+        9: "<:madness:1499091227772063915>",        # 8-8.99
+        10: "<:master:1499091308005036143>",        # 9-9.99
+        11: "<:grandmaster:1499091383854698537>",   # 10-10.99
+        12: "<:gm1:1499091457372328168>",           # 11-11.99
+        13: "<:gm2:1499091522887614634>",           # 12-12.99
+        14: "<:tas:1499091601388212244>",           # 13-13.99
+        15: "<:tas1:1499091670497624138>",          # 14-14.99
+        16: "<:tas2:1499091739745456189>",          # 15-15.99
+        17: "<:toohigh:1499091073086001355>",       # 16+
+    }
+    
+    if difficulty_float == 0:
+        return emojis[0]
+    elif difficulty_float < 1:
+        return emojis[1]
+    elif difficulty_float >= 16:
+        return emojis[17]
+    else:
+        # For values like 1.5 (1-1.99 range), we use int(value) + 1
+        emoji_key = int(difficulty_float) + 1
+        return emojis.get(emoji_key, emojis[0])
+
+
 def _send_completion_approved_webhook(completion):
     webhook_url = os.getenv("DISCORD_WEBHOOK_URL") or os.getenv("WEBHOOK_URL")
     if not webhook_url:
@@ -62,9 +100,12 @@ def _send_completion_approved_webhook(completion):
 
     ping_prefix = f"<@&{role_id}> " if mention_role else ""
 
+    # Get emoji for difficulty
+    difficulty_emoji = _get_difficulty_emoji(completion.level.difficulty)
+
     content_str = (
         f"{ping_prefix}{user_mention} has completed the level "
-        f"**{completion.level.name}** by {creator_name} - Difficulty: {completion.level.difficulty}."
+        f"**{completion.level.name}** by {creator_name} - Difficulty: {completion.level.difficulty} [{difficulty_emoji}]."
     )
 
     payload_obj = {"content": content_str}
