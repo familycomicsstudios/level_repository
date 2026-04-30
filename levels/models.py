@@ -26,7 +26,8 @@ def _load_country_choices():
         choices = [(code, name) for code, name in countries.items()]
         choices.sort(key=lambda x: x[1])  # Sort by country name
         return [('', '-- Select a country --')] + choices
-    except Exception:
+    except (FileNotFoundError, json.JSONDecodeError, IOError) as e:
+        logging.warning("Failed to load country choices: %s", e)
         return [('', '-- Select a country --')]
 
 
@@ -100,7 +101,11 @@ def _send_completion_approved_webhook(completion):
     if not webhook_url:
         return
 
-    role_id = "1499065510866714644"
+    role_id = os.getenv("DISCORD_ROLE_ID", "")
+    if not role_id:
+        logging.warning("DISCORD_ROLE_ID environment variable not set")
+        return
+    
     mention_role = float(completion.level.difficulty) >= 5
 
     creator_name = completion.level.creator.username if completion.level.creator else 'Deleted user'
@@ -112,7 +117,8 @@ def _send_completion_approved_webhook(completion):
             user_mention = f"<@{completion.user.profile.discord_user_id}>"
         else:
             user_mention = f"**{completion.user.username}**"
-    except:
+    except (AttributeError, TypeError) as e:
+        logging.warning("Error handling Discord user ID: %s", e)
         user_mention = f"**{completion.user.username}**"
 
     ping_prefix = f"<@&{role_id}> " if mention_role else ""

@@ -66,9 +66,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("SECRET_KEY")
 
-DEBUG = os.getenv("DEBUG") == "True"
+DEBUG = env_flag("DEBUG", default=False)
 
-ALLOWED_HOSTS = ["appel.pythonanywhere.com", "localhost", "127.0.0.1", ".vercel.app", ".now.sh", "workshop.appelgame.net"]
+# Production hosts only
+ALLOWED_HOSTS = ["appel.pythonanywhere.com", "workshop.appelgame.net"]
+
+# Add localhost when in development
+if DEBUG:
+    ALLOWED_HOSTS.extend(["localhost", "127.0.0.1"])
 
 
 # Application definition
@@ -216,13 +221,36 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # CORS Configuration
 CORS_ALLOWED_ORIGINS = [
     'https://turbowarp.org',
-    'https://workshop.appelgame.net',
+    'https://workshop.apellgame.net',
 ]
 
-# Allow common localhost development origins (include ports explicitly)
-CORS_ALLOWED_ORIGINS += [
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-    'http://localhost:8000',
-    'http://127.0.0.1:8000',
-]
+# Allow common localhost development origins only in DEBUG mode
+if DEBUG:
+    CORS_ALLOWED_ORIGINS += [
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+        'http://localhost:8000',
+        'http://127.0.0.1:8000',
+    ]
+
+CORS_ALLOW_CREDENTIALS = True
+
+# Security Headers (HTTPS/SSL Configuration)
+# In production (DEBUG=False), enforce HTTPS and set security headers
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+else:
+    # Development: Allow HTTP but still use secure flags where applicable
+    SECURE_SSL_REDIRECT = False
+
+# These are safe to enable in both DEBUG and production
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+SECURE_BROWSER_XSS_FILTER = True
