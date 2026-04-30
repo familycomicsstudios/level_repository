@@ -18,14 +18,14 @@
         <h4 class="mb-3">Rating Distribution</h4>
 
         <div class="distribution-wrapper mb-4">
-            <h6 class="mb-2">Difficulty Distribution (rounded to nearest integer)</h6>
+            <h6 class="mb-2">Difficulty Distribution (weighted by fraction)</h6>
             {% for item in difficulty_distribution %}
             <div class="distribution-row">
                 <div class="distribution-label">{{ item.label }}</div>
                 <div class="distribution-track">
                     <div class="distribution-fill distribution-fill-difficulty" style="width: {{ item.percent }}%"></div>
                 </div>
-                <div class="distribution-count">{{ item.count }}</div>
+                <div class="distribution-count">{{ item.count|floatformat:"-1" }}</div>
             </div>
             {% endfor %}
         </div>

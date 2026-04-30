@@ -271,19 +271,42 @@ def _round_half_up(value):
     return int(math.floor(float(value) + 0.5))
 
 
-def _build_distribution(values, labels, rounding=None, min_key=None, max_key=None):
+def _build_distribution(values, labels, rounding=None, min_key=None, max_key=None, distribute_fractional=False):
     counts = {}
     for raw_value in values:
         if raw_value is None:
             continue
 
-        key = rounding(raw_value) if rounding else int(raw_value)
-        if min_key is not None:
-            key = max(min_key, key)
-        if max_key is not None:
-            key = min(max_key, key)
+        if distribute_fractional:
+            # Distribute fractional values across adjacent integers
+            float_value = float(raw_value)
+            lower_key = int(math.floor(float_value))
+            upper_key = lower_key + 1
+            fraction = float_value - lower_key
+            
+            # Add the lower part to the lower key
+            lower_contribution = 1.0 - fraction
+            if min_key is not None:
+                lower_key = max(min_key, lower_key)
+            if max_key is not None:
+                lower_key = min(max_key, lower_key)
+            counts[lower_key] = counts.get(lower_key, 0) + lower_contribution
+            
+            # Add the upper part to the upper key (only if upper_key is different and in range)
+            if fraction > 0 and upper_key != lower_key:
+                if min_key is not None:
+                    upper_key = max(min_key, upper_key)
+                if max_key is not None:
+                    upper_key = min(max_key, upper_key)
+                counts[upper_key] = counts.get(upper_key, 0) + fraction
+        else:
+            key = rounding(raw_value) if rounding else int(raw_value)
+            if min_key is not None:
+                key = max(min_key, key)
+            if max_key is not None:
+                key = min(max_key, key)
 
-        counts[key] = counts.get(key, 0) + 1
+            counts[key] = counts.get(key, 0) + 1
 
     max_count = max(counts.values(), default=0)
 
@@ -311,7 +334,7 @@ def level_reviews(request, level_id):
     difficulty_distribution = _build_distribution(
         values=[review.difficulty_rating for review in reviews],
         labels=[(value, str(value)) for value in range(0, 16)],
-        rounding=_round_half_up,
+        distribute_fractional=True,
         min_key=0,
         max_key=15,
     )
