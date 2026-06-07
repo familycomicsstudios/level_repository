@@ -117,7 +117,16 @@
         <h2>Comments</h2>
         <div class="comment-list">
             {% for comment in comments %}
-                <p><strong><a href="{% url 'levels:user_profile' comment.user.username %}">{{ comment.user.username }}</a></strong>: {{ comment.content }} {% if comment.user == request.user %}<a href="{% url 'levels:edit_comment' comment.id %}">Edit</a> | <a href="{% url 'levels:delete_comment' comment.id %}">Delete</a>{% endif %}</p>
+                <p>
+                    <strong><a href="{% url 'levels:user_profile' comment.user.username %}">{{ comment.user.username }}</a></strong>: {{ comment.content }}
+                    {% if comment.user == request.user %}
+                        <a href="{% url 'levels:edit_comment' comment.id %}">Edit</a> |
+                        <form method="post" action="{% url 'levels:delete_comment' comment.id %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-link p-0 align-baseline">Delete</button>
+                        </form>
+                    {% endif %}
+                </p>
             {% empty %}
                 <p class="mb-0">No comments yet. Be the first to comment!</p>
             {% endfor %}

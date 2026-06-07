@@ -23,17 +23,22 @@ from django.core.paginator import Paginator
 from django.core.cache import cache
 from django.db.models import Q
 from django.http import HttpResponseForbidden, JsonResponse
+from django.conf import settings
+from django.views.decorators.http import require_POST
 import time
 from .profanity import find_profanity
 
 
 API_RATE_LIMIT_WINDOW_SECONDS = 60
 API_RATE_LIMIT_MAX_CALLS = 60
+LOGIN_RATE_LIMIT_WINDOW_SECONDS = 300
+LOGIN_RATE_LIMIT_MAX_ATTEMPTS_PER_IP = 20
+LOGIN_RATE_LIMIT_MAX_ATTEMPTS_PER_USER = 5
 
 
 def _client_ip(request):
     forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-    if forwarded_for:
+    if getattr(settings, 'TRUST_X_FORWARDED_FOR', False) and forwarded_for:
         return forwarded_for.split(',')[0].strip()
     return request.META.get('REMOTE_ADDR', 'unknown')
 
@@ -53,6 +58,37 @@ def _allow_api_request(request, scope='global'):
 
     if count > API_RATE_LIMIT_MAX_CALLS:
         retry_after = int(API_RATE_LIMIT_WINDOW_SECONDS - (now % API_RATE_LIMIT_WINDOW_SECONDS))
+        return False, retry_after
+    return True, 0
+
+
+def _increment_rate_limit_counter(key, timeout):
+    cache.add(key, 0, timeout=timeout)
+    try:
+        return cache.incr(key)
+    except ValueError:
+        cache.set(key, 1, timeout=timeout)
+        return 1
+
+
+def _allow_login_attempt(request):
+    now = time.time()
+    window = int(now // LOGIN_RATE_LIMIT_WINDOW_SECONDS)
+    timeout = LOGIN_RATE_LIMIT_WINDOW_SECONDS + 5
+    username = ((request.POST.get('username') or '').strip().lower() or 'anonymous')[:150]
+    ip = _client_ip(request)
+
+    per_ip_key = f"auth:rate:ip:{ip}:{window}"
+    per_user_key = f"auth:rate:user:{username}:{window}"
+
+    ip_attempts = _increment_rate_limit_counter(per_ip_key, timeout)
+    user_attempts = _increment_rate_limit_counter(per_user_key, timeout)
+
+    if (
+        ip_attempts > LOGIN_RATE_LIMIT_MAX_ATTEMPTS_PER_IP
+        or user_attempts > LOGIN_RATE_LIMIT_MAX_ATTEMPTS_PER_USER
+    ):
+        retry_after = int(LOGIN_RATE_LIMIT_WINDOW_SECONDS - (now % LOGIN_RATE_LIMIT_WINDOW_SECONDS))
         return False, retry_after
     return True, 0
 
@@ -481,6 +517,17 @@ class CustomLoginView(LoginView):
     template_name = 'registration/login.html'
     authentication_form = CaseInsensitiveAuthenticationForm
 
+    def post(self, request, *args, **kwargs):
+        allowed, retry_after = _allow_login_attempt(request)
+        if not allowed:
+            form = self.get_form()
+            form.add_error(None, f'Too many failed login attempts. Try again in {retry_after} seconds.')
+            return self.render_to_response(self.get_context_data(form=form), status=429)
+        return super().post(request, *args, **kwargs)
+
+
+@login_required
+@require_POST
 def logout(request):
     django.contrib.auth.logout(request)
     return redirect('levels:home')
@@ -702,6 +749,7 @@ def edit_comment(request, comment_id):
     return render(request, 'levels/edit_comment.html', {'comment': comment})
 
 @login_required
+@require_POST
 def delete_comment(request, comment_id):
     comment = get_object_or_404(Comment, id=comment_id)
 
@@ -824,7 +872,6 @@ def leaderboards(request):
             'clears_board': clears_board,
         },
     )
-
 
 
 

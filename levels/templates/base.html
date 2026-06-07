@@ -71,7 +71,10 @@
                             <a class="dropdown-item" href="{% url 'levels:user_profile' user.username %}">My Profile</a>
                             <a class="dropdown-item" href="{% url 'levels:user_settings' %}">Settings</a>
                             <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="{% url 'levels:logout' %}">Logout</a>
+                            <form method="post" action="{% url 'levels:logout' %}" class="px-4 py-1">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-link dropdown-item p-0 text-left">Logout</button>
+                            </form>
                         </div>
                     </li>
                 {% else %}

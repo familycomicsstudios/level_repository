@@ -234,6 +234,7 @@ if DEBUG:
     ]
 
 CORS_ALLOW_CREDENTIALS = True
+TRUST_X_FORWARDED_FOR = env_flag("TRUST_X_FORWARDED_FOR", default=False)
 
 # Security Headers (HTTPS/SSL Configuration)
 # In production (DEBUG=False), enforce HTTPS and set security headers

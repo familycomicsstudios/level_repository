@@ -5,7 +5,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth.models import User
 
-from .models import Level, LevelRating, LevelCompletion
+from .models import Level, LevelRating, LevelCompletion, Comment
 
 
 class LevelRatingTests(TestCase):
@@ -334,3 +334,54 @@ class AccountSettingsTests(TestCase):
         detail_response = self.client.get(reverse('levels:level_detail', args=[level.id]))
         self.assertEqual(detail_response.status_code, 200)
         self.assertContains(detail_response, 'Deleted user')
+
+
+class SecurityHardeningTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='secureuser', password='pass12345')
+        self.owner = User.objects.create_user(username='owner', password='pass12345')
+        self.level = Level.objects.create(
+            name='Security Level',
+            level_code='code',
+            difficulty=4,
+            creator=self.owner,
+        )
+        self.comment = Comment.objects.create(level=self.level, user=self.user, content='hello')
+
+    def test_logout_requires_post(self):
+        self.client.login(username='secureuser', password='pass12345')
+
+        get_response = self.client.get(reverse('levels:logout'))
+        self.assertEqual(get_response.status_code, 405)
+        self.assertIn('_auth_user_id', self.client.session)
+
+        post_response = self.client.post(reverse('levels:logout'))
+        self.assertEqual(post_response.status_code, 302)
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_delete_comment_requires_post(self):
+        self.client.login(username='secureuser', password='pass12345')
+
+        get_response = self.client.get(reverse('levels:delete_comment', args=[self.comment.id]))
+        self.assertEqual(get_response.status_code, 405)
+        self.assertTrue(Comment.objects.filter(id=self.comment.id).exists())
+
+        post_response = self.client.post(reverse('levels:delete_comment', args=[self.comment.id]))
+        self.assertEqual(post_response.status_code, 302)
+        self.assertFalse(Comment.objects.filter(id=self.comment.id).exists())
+
+    def test_login_rate_limit_blocks_repeated_failed_attempts(self):
+        login_url = reverse('levels:login')
+        for _ in range(5):
+            response = self.client.post(
+                login_url,
+                {'username': 'secureuser', 'password': 'wrong-password'},
+            )
+            self.assertEqual(response.status_code, 200)
+
+        blocked_response = self.client.post(
+            login_url,
+            {'username': 'secureuser', 'password': 'wrong-password'},
+        )
+        self.assertEqual(blocked_response.status_code, 429)
+        self.assertContains(blocked_response, 'Too many failed login attempts')
