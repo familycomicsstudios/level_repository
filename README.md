@@ -181,7 +181,7 @@ For issues, questions, or suggestions, please open an issue on GitHub or contact
 
 ## Authors
 
-- Theme Park Punter (@themadpunter)
+- Themadpunter (@themadpunter)
 
 ## Acknowledgments
 
