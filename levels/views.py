@@ -1,6 +1,8 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from .models import Level, Comment, LevelRating, LevelCompletion
+from .models import Level, Comment, LevelRating, LevelCompletion, CookieConsent
+import json
+from django.views.decorators.http import require_POST
 from django.contrib.auth.models import User
 from django.contrib.auth import update_session_auth_hash
 import math
@@ -715,6 +717,50 @@ def delete_comment(request, comment_id):
 
 def info_page(request):
     return render(request, 'levels/info.html')
+
+
+def privacy(request):
+    """Render a basic privacy policy page (placeholder content)."""
+    return render(request, 'levels/privacy.html')
+
+
+def cookie_policy(request):
+    return render(request, 'levels/cookie_policy.html')
+
+
+def terms(request):
+    return render(request, 'levels/tos.html')
+
+
+@require_POST
+def cookie_consent(request):
+    """Accepts JSON POST with a 'consent' object and records it for auditing.
+
+    Expects: { "consent": { ... } }
+    """
+    try:
+        payload = json.loads(request.body.decode('utf-8') or '{}')
+    except Exception:
+        return JsonResponse({'error': 'invalid_json'}, status=400)
+
+    consent = payload.get('consent') or {}
+
+    user = request.user if request.user.is_authenticated else None
+    ip = _client_ip(request)
+    ua = request.META.get('HTTP_USER_AGENT', '')[:1000]
+
+    try:
+        CookieConsent.objects.create(
+            user=user,
+            ip_address=ip,
+            user_agent=ua,
+            consent=consent,
+        )
+    except Exception:
+        # Don't fail the request if audit write fails
+        pass
+
+    return JsonResponse({'status': 'ok'})
 
 
 @login_required

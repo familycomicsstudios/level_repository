@@ -324,3 +324,16 @@ class LevelCompletion(models.Model):
         self.reviewed_at = timezone.now()
         self.save(update_fields=['status', 'reviewed_by', 'reviewed_at', 'updated_at'])
 
+
+class CookieConsent(models.Model):
+    """Record cookie consent decisions for auditing and DSAR support."""
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    ip_address = models.CharField(max_length=100, blank=True, default='')
+    user_agent = models.CharField(max_length=1000, blank=True, default='')
+    consent = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        who = self.user.username if self.user else self.ip_address or 'anonymous'
+        return f"CookieConsent by {who} at {self.created_at.isoformat()}"
+

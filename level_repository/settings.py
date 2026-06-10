@@ -250,7 +250,8 @@ else:
 
 # These are safe to enable in both DEBUG and production
 SESSION_COOKIE_HTTPONLY = True
-CSRF_COOKIE_HTTPONLY = True
+# Allow JavaScript to read the CSRF cookie so front-end consent code can send it in headers
+CSRF_COOKIE_HTTPONLY = False
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
 SECURE_BROWSER_XSS_FILTER = True

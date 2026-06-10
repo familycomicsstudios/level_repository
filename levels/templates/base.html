@@ -12,15 +12,7 @@
     <!-- Bootstrap CSS CDN -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
     <link rel="stylesheet" href="{% static 'css/style.css' %}" />
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZMT9FT42S3"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-
-        gtag('config', 'G-ZMT9FT42S3');
-    </script>
+    <!-- Google tag (gtag.js) will be loaded only after analytics consent -->
 </head>
 <body>
     <!-- Navigation Bar -->
@@ -91,10 +83,337 @@
 
     <div class="container mt-4 main-content">
         {% block content %}{% endblock %}
+
+                <!-- Cookie Consent Banner: full-featured banner and preference center -->
+                <style>
+    .cc-banner {
+        position: fixed; z-index: 99999; bottom: 0; left: 0; right: 0;
+        padding: 20px 30px;
+        background-color: #ffffff;
+        color: #1f2937;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        border-radius: 8px;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    }
+    .cc-banner.cc-hidden { display: none; }
+    .cc-banner-content { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; }
+    .cc-banner-text { flex: 1; min-width: 300px; }
+    .cc-banner-title { font-size: 18px; font-weight: 600; margin: 0 0 8px 0; color: #1f2937; }
+    .cc-banner-description { font-size: 14px; margin: 0; line-height: 1.5; color: #1f2937; opacity: 0.85; }
+    .cc-banner-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+    .cc-btn {
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: opacity 0.2s, transform 0.1s;
+    }
+    .cc-btn:hover { opacity: 0.9; }
+    .cc-btn:active { transform: scale(0.98); }
+    .cc-btn-accept { 
+        background-color: #2563eb;
+        color: white;
+        border: none;
+     }
+    .cc-btn-reject { 
+        background-color: #2563eb;
+        color: white;
+        border: none;
+     }
+    .cc-btn-customize { 
+        background-color: transparent;
+        color: #2563eb;
+        border: 2px solid #2563eb;
+     }
+    .cc-banner-links { margin-top: 12px; font-size: 12px; }
+    .cc-banner-links a { color: #2563eb; text-decoration: none; margin-right: 15px; }
+    .cc-banner-links a:hover { text-decoration: underline; }
+
+    /* Preference Center */
+    .cc-preferences { display: none; margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(0,0,0,0.1); }
+    .cc-preferences.cc-open { display: block; }
+    .cc-category { display: flex; align-items: flex-start; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(0,0,0,0.05); }
+    .cc-category:last-child { border-bottom: none; }
+    .cc-category-info { flex: 1; margin-right: 16px; }
+    .cc-category-name { font-weight: 500; font-size: 14px; margin-bottom: 4px; }
+    .cc-category-desc { font-size: 12px; opacity: 0.7; }
+    .cc-toggle { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+    .cc-toggle input { opacity: 0; width: 0; height: 0; }
+    .cc-toggle-slider {
+        position: absolute; cursor: pointer; inset: 0;
+        background-color: #ccc; border-radius: 24px; transition: 0.3s;
+    }
+    .cc-toggle-slider:before {
+        position: absolute; content: ""; height: 18px; width: 18px;
+        left: 3px; bottom: 3px; background-color: white;
+        border-radius: 50%; transition: 0.3s;
+    }
+    .cc-toggle input:checked + .cc-toggle-slider { background-color: #2563eb; }
+    .cc-toggle input:checked + .cc-toggle-slider:before { transform: translateX(20px); }
+    .cc-toggle input:disabled + .cc-toggle-slider { opacity: 0.6; cursor: not-allowed; }
+
+    /* Reopen Button */
+    .cc-reopen {
+        position: fixed; left: 20px; bottom: 20px;
+        width: 44px; height: 44px; border-radius: 50%;
+        background-color: #2563eb; color: white;
+        border: none; cursor: pointer; z-index: 99998;
+        display: none; align-items: center; justify-content: center;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        transition: transform 0.2s;
+    }
+    .cc-reopen:hover { transform: scale(1.1); }
+    .cc-reopen.cc-visible { display: flex; }
+    .cc-reopen svg { width: 20px; height: 20px; }
+</style>
+
+<!-- Cookie Consent Banner -->
+<div id="cc-banner" class="cc-banner cc-hidden">
+    <div class="cc-banner-content">
+        <div class="cc-banner-text">
+            <h3 class="cc-banner-title">We use cookies</h3>
+            <p class="cc-banner-description">We use cookies to enhance your browsing experience, serve personalized content, and analyze our traffic. By clicking "Accept All", you consent to our use of cookies.</p>
+            <div class="cc-banner-links">
+                <a href="{% url 'levels:privacy' %}">Privacy Policy</a>
+                <a href="{% url 'levels:cookie_policy' %}">Cookie Policy</a>
+            </div>
+        </div>
+        <div class="cc-banner-buttons">
+            <button class="cc-btn cc-btn-accept" onclick="ccAcceptAll()">Accept All</button>
+            <button class="cc-btn cc-btn-reject" onclick="ccRejectAll()">Reject All</button>
+            <button class="cc-btn cc-btn-customize" onclick="ccTogglePreferences()">Customize</button>
+        </div>
+    </div>
+  
+    <div id="cc-preferences" class="cc-preferences">
+    
+        <div class="cc-category">
+            <div class="cc-category-info">
+                <div class="cc-category-name">Necessary (Required)</div>
+                <div class="cc-category-desc">Essential cookies required for the website to function properly. These cannot be disabled.</div>
+            </div>
+            <label class="cc-toggle">
+                <input type="checkbox" id="cc-cat-necessary" checked disabled>
+                <span class="cc-toggle-slider"></span>
+            </label>
+        </div>
+    
+        <div class="cc-category">
+            <div class="cc-category-info">
+                <div class="cc-category-name">Analytics</div>
+                <div class="cc-category-desc">Cookies that help us understand how visitors interact with our website.</div>
+            </div>
+            <label class="cc-toggle">
+                <input type="checkbox" id="cc-cat-analytics" checked >
+                <span class="cc-toggle-slider"></span>
+            </label>
+        </div>
+    
+        <div class="cc-category">
+            <div class="cc-category-info">
+                <div class="cc-category-name">Marketing</div>
+                <div class="cc-category-desc">Cookies used to deliver personalized advertisements.</div>
+            </div>
+            <label class="cc-toggle">
+                <input type="checkbox" id="cc-cat-marketing"  >
+                <span class="cc-toggle-slider"></span>
+            </label>
+        </div>
+    
+        <div class="cc-category">
+            <div class="cc-category-info">
+                <div class="cc-category-name">Functional</div>
+                <div class="cc-category-desc">Cookies that enable additional functionality like live chat and videos.</div>
+            </div>
+            <label class="cc-toggle">
+                <input type="checkbox" id="cc-cat-functional"  >
+                <span class="cc-toggle-slider"></span>
+            </label>
+        </div>
+    
+        <div style="margin-top: 16px;">
+            <button class="cc-btn cc-btn-accept" onclick="ccSavePreferences()">Save Preferences</button>
+        </div>
+    </div>
+</div>
+
+<button id="cc-reopen" class="cc-reopen" onclick="ccShowBanner()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5"/>
+        <path d="M8.5 8.5v.01"/><path d="M16 15.5v.01"/><path d="M12 12v.01"/>
+        <path d="M11 17v.01"/><path d="M7 14v.01"/>
+    </svg>
+</button>
+
+        <footer class="site-footer text-center py-3 mt-4">
+            <a href="{% url 'levels:privacy' %}">Privacy Policy</a>
+            &nbsp;|&nbsp;
+            <a href="{% url 'levels:cookie_policy' %}">Cookie Policy</a>
+            &nbsp;|&nbsp;
+            <a href="{% url 'levels:terms' %}">Terms</a>
+        </footer>
     </div>
 
     <!-- Bootstrap JavaScript and dependencies -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+        (function(){
+    var COOKIE_NAME = 'cookie_consent';
+    var EXPIRY_DAYS = 365;
+    var categories = [
+    {
+        "id": "necessary",
+        "name": "Necessary",
+        "description": "Essential cookies required for the website to function properly. These cannot be disabled.",
+        "required": true,
+        "defaultEnabled": true,
+        "cookies": [
+            "sessionid",
+            "csrftoken",
+            "cookie_consent"
+        ]
+    },
+    {
+        "id": "analytics",
+        "name": "Analytics",
+        "description": "Cookies that help us understand how visitors interact with our website.",
+        "required": false,
+        "defaultEnabled": true,
+        "cookies": [
+            "_ga",
+            "_gid",
+            "_gat"
+        ]
+    },
+    {
+        "id": "marketing",
+        "name": "Marketing",
+        "description": "Cookies used to deliver personalized advertisements.",
+        "required": false,
+        "defaultEnabled": false,
+        "cookies": [
+            "_fbp",
+            "_gcl_au"
+        ]
+    },
+    {
+        "id": "functional",
+        "name": "Functional",
+        "description": "Cookies that enable additional functionality like live chat and videos.",
+        "required": false,
+        "defaultEnabled": false,
+        "cookies": [
+            "intercom-id",
+            "crisp-client"
+        ]
+    }
+];
+
+    function getCookie(name) {
+        var match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+        return match ? JSON.parse(decodeURIComponent(match[2])) : null;
+    }
+
+    function setCookie(name, value, days) {
+        var expires = new Date(Date.now() + days * 864e5).toUTCString();
+        document.cookie = name + '=' + encodeURIComponent(JSON.stringify(value)) + '; expires=' + expires + '; path=/; SameSite=Lax';
+    }
+
+    function postConsentToServer(consent) {
+        try {
+            fetch("{% url 'levels:cookie_consent' %}", {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': (function(){ var m = document.cookie.match('(^|;) ?csrftoken=([^;]*)(;|$)'); return m? decodeURIComponent(m[2]):''; })()
+                },
+                body: JSON.stringify({consent: consent || {}})
+            }).catch(function(){});
+        } catch(e) {}
+    }
+
+    function loadGtag(){
+        if (window.gtag) return;
+        var s = document.createElement('script');
+        s.async = true;
+        s.src = 'https://www.googletagmanager.com/gtag/js?id=G-ZMT9FT42S3';
+        s.onload = function(){
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);} window.gtag = gtag;
+            gtag('js', new Date());
+            gtag('config', 'G-ZMT9FT42S3');
+        };
+        document.head.appendChild(s);
+    }
+
+    function hideBanner() {
+        document.getElementById('cc-banner').classList.add('cc-hidden');
+        document.getElementById('cc-reopen').classList.add('cc-visible');
+    }
+
+    window.ccShowBanner = function() {
+        document.getElementById('cc-banner').classList.remove('cc-hidden');
+        document.getElementById('cc-reopen').classList.remove('cc-visible');
+    };
+
+    window.ccAcceptAll = function() {
+        var consent = {};
+        categories.forEach(function(cat) { consent[cat.id] = true; });
+        setCookie(COOKIE_NAME, consent, EXPIRY_DAYS);
+        postConsentToServer(consent);
+        hideBanner();
+        loadGtag();
+    };
+
+    window.ccRejectAll = function() {
+        var consent = {};
+        categories.forEach(function(cat) { consent[cat.id] = cat.required; });
+        setCookie(COOKIE_NAME, consent, EXPIRY_DAYS);
+        postConsentToServer(consent);
+        hideBanner();
+    };
+
+    window.ccTogglePreferences = function() {
+        document.getElementById('cc-preferences').classList.toggle('cc-open');
+    };
+
+    window.ccSavePreferences = function() {
+        var consent = {};
+        categories.forEach(function(cat) {
+            var checkbox = document.getElementById('cc-cat-' + cat.id);
+            consent[cat.id] = checkbox ? checkbox.checked : cat.required;
+        });
+        setCookie(COOKIE_NAME, consent, EXPIRY_DAYS);
+        postConsentToServer(consent);
+        hideBanner();
+        if (consent.analytics) loadGtag();
+    };
+
+    // Initialize banner state and preference toggles
+    document.addEventListener('DOMContentLoaded', function(){
+        var existingConsent = getCookie(COOKIE_NAME) || {};
+        if (Object.keys(existingConsent).length === 0) {
+            // show banner
+            document.getElementById('cc-banner').classList.remove('cc-hidden');
+        } else {
+            // apply consent: if analytics allowed, load analytics script
+            if (existingConsent.analytics) loadGtag();
+        }
+
+        // set preference toggles initial state
+        categories.forEach(function(cat){
+            var checkbox = document.getElementById('cc-cat-' + cat.id);
+            if (!checkbox) return;
+            if (existingConsent.hasOwnProperty(cat.id)) checkbox.checked = !!existingConsent[cat.id];
+            else checkbox.checked = !!cat.defaultEnabled;
+            checkbox.disabled = !!cat.required;
+        });
+    });
+
+})();
+</script>
 </body>
 </html>

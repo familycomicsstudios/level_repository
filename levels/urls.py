@@ -26,6 +26,10 @@ urlpatterns = [
     path('comment/<int:comment_id>/edit/', views.edit_comment, name='edit_comment'),
     path('comment/<int:comment_id>/delete/', views.delete_comment, name='delete_comment'),
     path('info/', views.info_page, name='info_page'),
+    path('privacy/', views.privacy, name='privacy'),
+    path('cookie-policy/', views.cookie_policy, name='cookie_policy'),
+    path('terms/', views.terms, name='terms'),
+    path('cookie-consent/', views.cookie_consent, name='cookie_consent'),
     path('settings/', views.user_settings, name='user_settings'),
     path('leaderboards/', views.leaderboards, name='leaderboards'),
 
