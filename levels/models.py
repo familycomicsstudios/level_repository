@@ -15,6 +15,16 @@ DIFFICULTY_SYSTEM_CHOICES = [
     ("grassy", "Grassy"),
 ]
 
+TAG_VALUES = [
+    "kaizo", "beginner-friendly", "casual", "precision", "humanly-impossible", "physically-impossible", "short-length",
+    "medium-length", "long-length", "marathon-length", "speedrunning", "time-trial", "collectathon", "maze", "puzzle",
+    "timings", "thread-the-needle", "springs", "spikedges", "sidejumping", "setups", "routing", "needle", "memory",
+    "litejumps", "learny", "keydoor", "freefall", "endurance", "checkpoints", "phobia", "one-shot", "crushers", "crumble-blocks",
+    "modded-tiles", "modded-project", "crouch-spam", "corner-tech", "glitches", "burtha", "blue-platforms", "joke", "auto",
+    "troll", "practice", "single-jump", "showcase", "work-in-progress"
+]
+TAG_CHOICES = [(value, value.replace('-', ' ').replace('_', ' ').title()) for value in TAG_VALUES]
+
 
 def _load_country_choices():
     """Load country choices from countries.json file."""
@@ -193,6 +203,7 @@ class Level(models.Model):
     quality_rating = models.FloatField(null=True, blank=True)
     level_ratings = models.JSONField(default=list, blank=True)
     mod_category = models.CharField(max_length=50, choices=MOD_CHOICES, default='appel')
+    tags = models.JSONField(default=list, blank=True, help_text="Choose up to 10 tags for this level.")
 
     creator = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="levels")
     created_at = models.DateTimeField(auto_now_add=True)

@@ -4,6 +4,11 @@
   <h2>Edit Level: {{ level.name }}</h2>
   <form method="POST">
     {% csrf_token %}
+    <datalist id="tag-suggestions">
+      {% for tag_value, tag_label in tag_choices %}
+      <option value="{{ tag_label }}"></option>
+      {% endfor %}
+    </datalist>
     {{ form.as_p }}
     <button type="submit">Save changes</button>
   </form>

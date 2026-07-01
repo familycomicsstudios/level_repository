@@ -9,26 +9,32 @@
 
     <div class="bubble-section">
         <h5>Search Levels</h5>
-        <form method="get" class="bubble-actions" style="align-items: center;">
-            <input type="text" name="q" value="{{ search_query }}" class="form-control" style="max-width: 420px;" placeholder="Search by name, creator, mod, description, URL, video...">
+        <form method="get" class="bubble-actions" style="align-items: center; flex-wrap: wrap;">
+            <input type="text" name="q" value="{{ search_query }}" class="form-control" style="max-width: 420px;" placeholder="Search by name, creator, mod, description, URL, video, or tags...">
+            <input type="text" name="tag" value="{% if selected_tags %}{{ selected_tags|join:', ' }}{% endif %}" class="form-control" style="max-width: 300px;" placeholder="Filter by tags" list="tag-suggestions" autocomplete="off">
             <input type="hidden" name="sort" value="{{ sort_by }}">
             <input type="hidden" name="direction" value="{{ sort_direction }}">
             <button type="submit" class="btn btn-primary">Search</button>
-            {% if search_query %}
+            {% if search_query or selected_tags %}
             <a href="?sort={{ sort_by }}&direction={{ sort_direction }}" class="btn btn-secondary">Clear</a>
             {% endif %}
         </form>
+        <datalist id="tag-suggestions">
+            {% for tag_value, tag_label in tag_choices %}
+            <option value="{{ tag_label }}"></option>
+            {% endfor %}
+        </datalist>
     </div>
 
     <div class="bubble-section">
         <h5>Sort Levels</h5>
         <div class="bubble-actions">
-            <a href="?q={{ search_query|urlencode }}&sort=difficulty&direction={% if sort_by == 'difficulty' and sort_direction == 'desc' %}asc{% else %}desc{% endif %}" class="btn btn-primary">Difficulty Rating</a>
-            <a href="?q={{ search_query|urlencode }}&sort=quality_rating&direction={% if sort_by == 'quality_rating' and sort_direction == 'desc' %}asc{% else %}desc{% endif %}" class="btn btn-primary">Quality Rating</a>
-            <a href="?q={{ search_query|urlencode }}&sort=created_at&direction={% if sort_by == 'created_at' and sort_direction == 'desc' %}asc{% else %}desc{% endif %}" class="btn btn-primary">Date Added</a>
-            <a href="?q={{ search_query|urlencode }}&sort=name&direction={% if sort_by == 'name' and sort_direction == 'asc' %}desc{% else %}asc{% endif %}" class="btn btn-primary">Name</a>
-            <a href="?q={{ search_query|urlencode }}&sort=mod_category&direction={% if sort_by == 'mod_category' and sort_direction == 'asc' %}desc{% else %}asc{% endif %}" class="btn btn-primary">Mod</a>
-            <a href="?q={{ search_query|urlencode }}&sort=creator&direction={% if sort_by == 'creator' and sort_direction == 'asc' %}desc{% else %}asc{% endif %}" class="btn btn-primary">Creator</a>
+            <a href="?q={{ search_query|urlencode }}{% for selected_tag in selected_tags %}&tag={{ selected_tag|urlencode }}{% endfor %}&sort=difficulty&direction={% if sort_by == 'difficulty' and sort_direction == 'desc' %}asc{% else %}desc{% endif %}" class="btn btn-primary">Difficulty Rating</a>
+            <a href="?q={{ search_query|urlencode }}{% for selected_tag in selected_tags %}&tag={{ selected_tag|urlencode }}{% endfor %}&sort=quality_rating&direction={% if sort_by == 'quality_rating' and sort_direction == 'desc' %}asc{% else %}desc{% endif %}" class="btn btn-primary">Quality Rating</a>
+            <a href="?q={{ search_query|urlencode }}{% for selected_tag in selected_tags %}&tag={{ selected_tag|urlencode }}{% endfor %}&sort=created_at&direction={% if sort_by == 'created_at' and sort_direction == 'desc' %}asc{% else %}desc{% endif %}" class="btn btn-primary">Date Added</a>
+            <a href="?q={{ search_query|urlencode }}{% for selected_tag in selected_tags %}&tag={{ selected_tag|urlencode }}{% endfor %}&sort=name&direction={% if sort_by == 'name' and sort_direction == 'asc' %}desc{% else %}asc{% endif %}" class="btn btn-primary">Name</a>
+            <a href="?q={{ search_query|urlencode }}{% for selected_tag in selected_tags %}&tag={{ selected_tag|urlencode }}{% endfor %}&sort=mod_category&direction={% if sort_by == 'mod_category' and sort_direction == 'asc' %}desc{% else %}asc{% endif %}" class="btn btn-primary">Mod</a>
+            <a href="?q={{ search_query|urlencode }}{% for selected_tag in selected_tags %}&tag={{ selected_tag|urlencode }}{% endfor %}&sort=creator&direction={% if sort_by == 'creator' and sort_direction == 'asc' %}desc{% else %}asc{% endif %}" class="btn btn-primary">Creator</a>
         </div>
     </div>
 
@@ -42,6 +48,7 @@
                         <th>Difficulty Rating</th>
                         <th>Quality Rating</th>
                         <th>Mod</th>
+                        <th>Tags</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -60,10 +67,17 @@
                             <td>{% if level.difficulty_rating is not None %}{{ level.difficulty_rating|display_difficulty:display_system }}{% else %}Not rated{% endif %}</td>
                             <td>{% if level.quality_rating is not None %}{{ level.quality_rating|floatformat:2 }}/5 ({{ level.quality_rating|as_stars }}){% else %}Not rated{% endif %}</td>
                             <td>{{ level.get_mod_category_display }}</td>
+                            <td>
+                                {% if level.tags %}
+                                    {% for tag in level.tags %}<span class="badge bg-secondary me-1">{{ tag }}</span>{% endfor %}
+                                {% else %}
+                                    None
+                                {% endif %}
+                            </td>
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="5">No levels available.</td>
+                            <td colspan="6">No levels available.</td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -76,12 +90,12 @@
             <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
             <div>
                 {% if page_obj.has_previous %}
-                    <a href="?q={{ search_query|urlencode }}&page=1&sort={{ sort_by }}&direction={{ sort_direction }}" class="btn btn-secondary">First</a>
-                    <a href="?q={{ search_query|urlencode }}&page={{ page_obj.previous_page_number }}&sort={{ sort_by }}&direction={{ sort_direction }}" class="btn btn-secondary">Previous</a>
+                    <a href="?q={{ search_query|urlencode }}{% for selected_tag in selected_tags %}&tag={{ selected_tag|urlencode }}{% endfor %}&page=1&sort={{ sort_by }}&direction={{ sort_direction }}" class="btn btn-secondary">First</a>
+                    <a href="?q={{ search_query|urlencode }}{% for selected_tag in selected_tags %}&tag={{ selected_tag|urlencode }}{% endfor %}&page={{ page_obj.previous_page_number }}&sort={{ sort_by }}&direction={{ sort_direction }}" class="btn btn-secondary">Previous</a>
                 {% endif %}
                 {% if page_obj.has_next %}
-                    <a href="?q={{ search_query|urlencode }}&page={{ page_obj.next_page_number }}&sort={{ sort_by }}&direction={{ sort_direction }}" class="btn btn-secondary">Next</a>
-                    <a href="?q={{ search_query|urlencode }}&page={{ page_obj.paginator.num_pages }}&sort={{ sort_by }}&direction={{ sort_direction }}" class="btn btn-secondary">Last</a>
+                    <a href="?q={{ search_query|urlencode }}{% for selected_tag in selected_tags %}&tag={{ selected_tag|urlencode }}{% endfor %}&page={{ page_obj.next_page_number }}&sort={{ sort_by }}&direction={{ sort_direction }}" class="btn btn-secondary">Next</a>
+                    <a href="?q={{ search_query|urlencode }}{% for selected_tag in selected_tags %}&tag={{ selected_tag|urlencode }}{% endfor %}&page={{ page_obj.paginator.num_pages }}&sort={{ sort_by }}&direction={{ sort_direction }}" class="btn btn-secondary">Last</a>
                 {% endif %}
             </div>
         </div>

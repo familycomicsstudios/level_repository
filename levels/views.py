@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from .models import Level, Comment, LevelRating, LevelCompletion, CookieConsent
+from .models import Level, Comment, LevelRating, LevelCompletion, CookieConsent, TAG_CHOICES
 import json
 from django.views.decorators.http import require_POST
 from django.contrib.auth.models import User
@@ -25,6 +25,7 @@ from django.core.paginator import Paginator
 from django.core.cache import cache
 from django.db.models import Q
 from django.http import HttpResponseForbidden, JsonResponse
+import re
 import time
 from .profanity import find_profanity
 
@@ -384,7 +385,7 @@ def upload_level(request):
             return redirect('levels:list')
     else:
         form = LevelForm()
-    return render(request, 'levels/upload_level.html', {'form': form})
+    return render(request, 'levels/upload_level.html', {'form': form, 'tag_choices': TAG_CHOICES})
 
 def level_list(request):
     from django.db.models import Case, When, Value, CharField
@@ -404,7 +405,20 @@ def level_list(request):
             | Q(video_url__icontains=search_query)
             | Q(creator__username__icontains=search_query)
             | Q(creator__profile__display_name__icontains=search_query)
+            | Q(tags__contains=[search_query])
         ).distinct()
+
+    available_tags = {tag for tag, _ in TAG_CHOICES}
+    selected_tags = []
+    for raw_tag in request.GET.getlist('tag'):
+        for token in re.split(r"[\s,;]+", raw_tag):
+            normalized_tag = token.strip().lower()
+            if normalized_tag in available_tags:
+                selected_tags.append(normalized_tag)
+    selected_tags = list(dict.fromkeys(selected_tags))
+    if selected_tags:
+        for tag in selected_tags:
+            levels = levels.filter(tags__contains=[tag])
 
     # Sorting functionality
     sort_by = request.GET.get('sort', 'quality_rating')
@@ -461,6 +475,8 @@ def level_list(request):
         'sort_by': sort_by,
         'sort_direction': sort_direction,
         'search_query': search_query,
+        'selected_tags': selected_tags,
+        'tag_choices': TAG_CHOICES,
         'difficulty_system': difficulty_system,
     })
 
@@ -500,7 +516,7 @@ def edit_level(request, level_id):
     else:
         form = LevelForm(instance=level)
 
-    return render(request, 'levels/edit_level.html', {'form': form, 'level': level})
+    return render(request, 'levels/edit_level.html', {'form': form, 'level': level, 'tag_choices': TAG_CHOICES})
 
 @login_required
 def delete_level(request, level_id):

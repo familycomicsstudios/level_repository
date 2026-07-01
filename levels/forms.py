@@ -1,3 +1,4 @@
+import re
 from django import forms
 from decimal import Decimal, ROUND_HALF_UP
 from urllib.parse import urlparse, parse_qs
@@ -5,7 +6,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, PasswordChangeForm
 from django.contrib.auth.hashers import check_password
 from django.contrib.auth.models import User
-from .models import Level, Profile, LevelRating, LevelCompletion, DIFFICULTY_SYSTEM_CHOICES, COUNTRY_CHOICES
+from .models import Level, Profile, LevelRating, LevelCompletion, DIFFICULTY_SYSTEM_CHOICES, COUNTRY_CHOICES, TAG_CHOICES
 from .profanity import find_profanity
 
 class LevelForm(forms.ModelForm):
@@ -18,6 +19,23 @@ class LevelForm(forms.ModelForm):
         help_text="Use up to 2 decimal places.",
         widget=forms.NumberInput(attrs={"step": "any", "inputmode": "decimal"}),
     )
+
+    tags = forms.CharField(
+        required=False,
+        label="Tags",
+        help_text="Type tags from the suggestions list. Separate tags with commas.",
+        widget=forms.TextInput(attrs={
+            'placeholder': 'Type a tag name...',
+            'autocomplete': 'off',
+            'list': 'tag-suggestions',
+        }),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and getattr(self.instance, 'pk', None):
+            selected_tags = self.instance.tags or []
+            self.fields['tags'].initial = ', '.join(selected_tags)
 
     def clean_difficulty(self):
         value = self.cleaned_data["difficulty"]
@@ -53,6 +71,25 @@ class LevelForm(forms.ModelForm):
 
     def clean_other_creators(self):
         return self._validate_clean_text(self.cleaned_data.get("other_creators"), "Other creators")
+
+    def clean_tags(self):
+        raw_value = self.cleaned_data.get("tags") or ""
+        token_values = [token.strip() for token in re.split(r"[\s,;]+", raw_value) if token.strip()]
+
+        normalized_tags = []
+        for raw_tag in token_values:
+            canonical_tag = None
+            normalized_tag = raw_tag.strip().lower()
+            for value, label in TAG_CHOICES:
+                if normalized_tag in {value, label.lower()}:
+                    canonical_tag = value
+                    break
+            if canonical_tag is None:
+                raise forms.ValidationError("Choose tags from the suggested list.")
+            if canonical_tag not in normalized_tags:
+                normalized_tags.append(canonical_tag)
+
+        return normalized_tags
 
     def clean_video_url(self):
         raw_url = (self.cleaned_data.get("video_url") or "").strip()
@@ -90,7 +127,15 @@ class LevelForm(forms.ModelForm):
             'url',
             'video_url',
             'description',
+            'tags',
         ]
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        instance.tags = self.cleaned_data.get('tags') or []
+        if commit:
+            instance.save()
+        return instance
 
 
 class LevelRatingForm(forms.ModelForm):

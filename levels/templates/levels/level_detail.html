@@ -27,6 +27,11 @@
         {% if level.other_creators %}
         <p><strong>Other Creators:</strong> {{ level.other_creators|render_other_creators }}</p>
         {% endif %}
+        {% if level.tags %}
+        <p><strong>Tags:</strong>
+            {% for tag in level.tags %}<span class="badge bg-secondary me-1">{{ tag }}</span>{% endfor %}
+        </p>
+        {% endif %}
         {% if level.url %}
         <p><strong>URL:</strong> <a href="{{ level.url }}" target="_blank" rel="noopener noreferrer">{{ level.url }}</a></p>
         {% endif %}

@@ -4,6 +4,11 @@
 <h2 class="mb-4">Upload Level</h2>
 <form method="post" class="form-group">
     {% csrf_token %}
+    <datalist id="tag-suggestions">
+        {% for tag_value, tag_label in tag_choices %}
+        <option value="{{ tag_label }}"></option>
+        {% endfor %}
+    </datalist>
     {{ form.as_p }}
     <button type="submit" class="btn btn-primary">Upload</button>
 </form>

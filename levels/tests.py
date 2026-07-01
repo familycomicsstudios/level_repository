@@ -106,6 +106,49 @@ class LevelRatingTests(TestCase):
         self.assertIsNone(seeded.quality_rating)
         self.assertEqual(uploaded.difficulty_rating, 9)
 
+    def test_levels_default_to_empty_tag_list(self):
+        self.assertEqual(self.level.tags, [])
+
+    def test_upload_level_accepts_many_tags(self):
+        self.client.login(username='creator', password='pass12345')
+
+        upload_url = reverse('levels:upload')
+        response = self.client.post(upload_url, {
+            'name': 'Tagged Level',
+            'level_code': 'code',
+            'mod_category': 'appel',
+            'difficulty': 5,
+            'original_uploader': '',
+            'description': 'desc',
+            'tags': ', '.join([f'tag{i}' for i in range(11)]),
+        })
+
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(Level.objects.filter(name='Tagged Level').exists())
+
+    def test_level_list_can_filter_by_tags(self):
+        easy_level = Level.objects.create(
+            name='Easy Puzzle Level',
+            level_code='abc',
+            difficulty=2,
+            creator=self.creator,
+            tags=['easy', 'puzzle'],
+        )
+        hard_level = Level.objects.create(
+            name='Hard Level',
+            level_code='def',
+            difficulty=8,
+            creator=self.creator,
+            tags=['hard'],
+        )
+
+        response = self.client.get(reverse('levels:list'), {'tag': 'easy'})
+        page_levels = list(response.context['page_obj'])
+
+        self.assertEqual(page_levels[0].id, easy_level.id)
+        self.assertEqual(len(page_levels), 1)
+        self.assertNotContains(response, hard_level.name)
+
     def test_submit_level_completion_requires_login(self):
         response = self.client.get(reverse('levels:submit_level_completion', args=[self.level.id]))
         self.assertEqual(response.status_code, 302)
