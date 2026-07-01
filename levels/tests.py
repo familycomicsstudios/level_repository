@@ -5,6 +5,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth.models import User
 
+from .forms import LevelForm
 from .models import Level, LevelRating, LevelCompletion
 
 
@@ -108,6 +109,19 @@ class LevelRatingTests(TestCase):
 
     def test_levels_default_to_empty_tag_list(self):
         self.assertEqual(self.level.tags, [])
+
+    def test_edit_form_displays_tags_as_comma_separated_values(self):
+        level = Level.objects.create(
+            name='Tagged Level',
+            level_code='code',
+            difficulty=5,
+            creator=self.creator,
+            tags=['one-shot', 'precision'],
+        )
+
+        form = LevelForm(instance=level)
+
+        self.assertEqual(form.fields['tags'].initial, 'one-shot, precision')
 
     def test_upload_level_accepts_many_tags(self):
         self.client.login(username='creator', password='pass12345')

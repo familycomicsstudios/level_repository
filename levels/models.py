@@ -21,7 +21,7 @@ TAG_VALUES = [
     "timings", "thread-the-needle", "springs", "spikedges", "sidejumping", "setups", "routing", "needle", "memory",
     "litejumps", "learny", "keydoor", "freefall", "endurance", "checkpoints", "phobia", "one-shot", "crushers", "crumble-blocks",
     "modded-tiles", "modded-project", "crouch-spam", "corner-tech", "glitches", "burtha", "blue-platforms", "joke", "auto",
-    "troll", "practice", "single-jump", "showcase", "work-in-progress"
+    "troll", "practice", "single-jump", "showcase", "work-in-progress", "one shot"
 ]
 TAG_CHOICES = [(value, value.replace('-', ' ').replace('_', ' ').title()) for value in TAG_VALUES]
 

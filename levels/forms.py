@@ -74,14 +74,14 @@ class LevelForm(forms.ModelForm):
 
     def clean_tags(self):
         raw_value = self.cleaned_data.get("tags") or ""
-        token_values = [token.strip() for token in re.split(r"[\s,;]+", raw_value) if token.strip()]
+        token_values = [token.strip() for token in raw_value.split(',') if token.strip()]
 
         normalized_tags = []
         for raw_tag in token_values:
             canonical_tag = None
-            normalized_tag = raw_tag.strip().lower()
+            normalized_tag = re.sub(r"\s+", "-", raw_tag.strip().lower())
             for value, label in TAG_CHOICES:
-                if normalized_tag in {value, label.lower()}:
+                if normalized_tag in {value, label.lower().replace(' ', '-') }:
                     canonical_tag = value
                     break
             if canonical_tag is None:

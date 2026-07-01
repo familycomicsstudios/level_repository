@@ -4,12 +4,94 @@
 <h2 class="mb-4">Upload Level</h2>
 <form method="post" class="form-group">
     {% csrf_token %}
-    <datalist id="tag-suggestions">
-        {% for tag_value, tag_label in tag_choices %}
-        <option value="{{ tag_label }}"></option>
-        {% endfor %}
-    </datalist>
     {{ form.as_p }}
     <button type="submit" class="btn btn-primary">Upload</button>
 </form>
+
+<script>
+(function () {
+    const input = document.getElementById('id_tags');
+    if (!input) return;
+
+    const allTags = [{% for tag_value, tag_label in tag_choices %}{ value: "{{ tag_value|escapejs }}", label: "{{ tag_label|escapejs }}" },{% endfor %}];
+    const initialValue = input.value || '';
+    if (initialValue) {
+        input.value = initialValue
+            .split(',')
+            .map(tag => tag.trim())
+            .filter(Boolean)
+            .map(tag => {
+                const match = allTags.find(candidate => candidate.label.toLowerCase() === tag.toLowerCase() || candidate.value.toLowerCase() === tag.toLowerCase());
+                return match ? match.label : tag;
+            })
+            .join(', ');
+    }
+    const suggestions = document.createElement('ul');
+    suggestions.id = 'tag-suggestions-list';
+    suggestions.className = 'list-group mt-2';
+    suggestions.style.display = 'none';
+    input.parentNode.insertBefore(suggestions, input.nextSibling);
+
+    const normalizeTags = (value) => {
+        return value
+            .split(',')
+            .map(tag => tag.trim())
+            .filter(Boolean);
+    };
+
+    const formatTags = (value) => normalizeTags(value).join(', ');
+    const normalizeToken = (value) => value.toLowerCase().replace(/\s+/g, ' ').trim();
+    const toStoredTag = (value) => value.toLowerCase().replace(/\s+/g, '-');
+
+    const renderSuggestions = () => {
+        const currentValue = input.value.trim();
+        const parts = currentValue.split(',');
+        const currentToken = parts[parts.length - 1].trim();
+        const filtered = allTags.filter(tag => {
+            const haystacks = [tag.value, tag.label].map(value => normalizeToken(value));
+            return haystacks.some(value => value.includes(normalizeToken(currentToken)));
+        });
+
+        suggestions.innerHTML = '';
+        if (!currentValue || !currentToken || filtered.length === 0) {
+            suggestions.style.display = 'none';
+            return;
+        }
+
+        suggestions.style.display = 'block';
+        filtered.slice(0, 12).forEach(tag => {
+            const item = document.createElement('li');
+            item.className = 'list-group-item list-group-item-action';
+            item.textContent = tag.label;
+            item.addEventListener('mousedown', function (event) {
+                event.preventDefault();
+                const partsBefore = currentValue.split(',').slice(0, -1);
+                const nextValue = partsBefore.concat(toStoredTag(tag.value)).join(', ');
+                input.value = formatTags(nextValue);
+                input.focus();
+                renderSuggestions();
+            });
+            suggestions.appendChild(item);
+        });
+    };
+
+    const syncValue = () => {
+        renderSuggestions();
+    };
+
+    input.addEventListener('input', syncValue);
+    input.addEventListener('focus', renderSuggestions);
+    input.addEventListener('blur', function () {
+        const normalized = formatTags(input.value);
+        if (normalized !== input.value) {
+            input.value = normalized;
+        }
+        setTimeout(function () {
+            suggestions.style.display = 'none';
+        }, 150);
+    });
+
+    syncValue();
+})();
+</script>
 {% endblock %}
